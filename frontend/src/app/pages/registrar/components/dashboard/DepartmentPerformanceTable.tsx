@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Building2, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
-import { registrarService } from "../../../../../services/registrarService";
+import { registrarService } from "@/app/services/registrarService";
 
 export function DepartmentPerformanceTable() {
   const [depts, setDepts] = useState<any[]>([]);

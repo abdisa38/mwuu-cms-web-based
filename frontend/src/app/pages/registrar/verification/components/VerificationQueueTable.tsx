@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { MoreVertical, Mail, User, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { registrarService } from "../../../../../services/registrarService";
-import { UserProfile } from "../../../../../services/authService";
+import { registrarService } from "@/app/services/registrarService";
+import { UserProfile } from "@/app/services/authService";
 
 interface VerificationQueueTableProps {
   onSelectStudent: (studentId: string) => void;

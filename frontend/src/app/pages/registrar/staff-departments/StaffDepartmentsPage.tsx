@@ -3,8 +3,8 @@ import { StaffKPIs } from "./components/StaffKPIs";
 import { Users, Building2, Shield, Key, Plus, RefreshCw, Trash2, Mail, Phone } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
-import { registrarService } from "../../../../services/registrarService";
-import { UserProfile } from "../../../../services/authService";
+import { registrarService } from "@/app/services/registrarService";
+import { UserProfile } from "@/app/services/authService";
 import { toast } from "sonner";
 
 export function StaffDepartmentsPage() {

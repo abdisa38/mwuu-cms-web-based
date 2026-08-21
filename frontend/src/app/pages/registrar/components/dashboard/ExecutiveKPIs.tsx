@@ -13,7 +13,7 @@ import {
   Activity,
   Calendar
 } from "lucide-react";
-import { registrarService, RegistrarDashboardStats } from "../../../../services/registrarService";
+import { registrarService, RegistrarDashboardStats } from "@/app/services/registrarService";
 
 export function ExecutiveKPIs() {
   const [stats, setStats] = useState<RegistrarDashboardStats | null>(null);

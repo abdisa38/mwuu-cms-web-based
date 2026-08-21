@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Search, Plus, UploadCloud, Download, RefreshCw, Mail, CheckCircle2, Eye, User } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { StudentKPIs } from "./components/StudentKPIs";
-import { registrarService } from "../../../../services/registrarService";
-import { UserProfile } from "../../../../services/authService";
+import { registrarService } from "@/app/services/registrarService";
+import { UserProfile } from "@/app/services/authService";
 import { toast } from "sonner";
 
 export function StudentDatabasePage() {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, RefreshCw, FileText, Shield, Clock, User, History } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { registrarService } from "../../../../services/registrarService";
+import { registrarService } from "@/app/services/registrarService";
 import { toast } from "sonner";
 
 export function AuditLogsPage() {

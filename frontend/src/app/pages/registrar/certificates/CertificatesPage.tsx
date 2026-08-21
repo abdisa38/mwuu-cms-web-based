@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Search, Download, HelpCircle, Award, Settings, RefreshCw, Plus, Printer } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { CertificateKPIs } from "./components/CertificateKPIs";
-import { registrarService } from "../../../../services/registrarService";
-import { ClearanceRequest } from "../../../../services/clearanceService";
+import { registrarService } from "@/app/services/registrarService";
+import { ClearanceRequest } from "@/app/services/clearanceService";
 import { Certificate } from "@/app/components/shared/Certificate";
 import { toast } from "sonner";
 

@@ -12,8 +12,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { registrarService } from "../../../../../services/registrarService";
-import { ClearanceRequest } from "../../../../../services/clearanceService";
+import { registrarService } from "@/app/services/registrarService";
+import { ClearanceRequest } from "@/app/services/clearanceService";
 
 export function RecentClearanceRequestsTable() {
   const [requests, setRequests] = useState<ClearanceRequest[]>([]);

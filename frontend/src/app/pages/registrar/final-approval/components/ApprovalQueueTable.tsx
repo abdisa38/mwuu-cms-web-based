@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { MoreVertical, ShieldAlert, AlertCircle, FileText, CheckCircle2, Clock, CheckSquare, RefreshCw } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
-import { registrarService } from "../../../../../services/registrarService";
-import { ClearanceRequest } from "../../../../../services/clearanceService";
+import { registrarService } from "@/app/services/registrarService";
+import { ClearanceRequest } from "@/app/services/clearanceService";
 import { toast } from "sonner";
 
 interface ApprovalQueueTableProps {

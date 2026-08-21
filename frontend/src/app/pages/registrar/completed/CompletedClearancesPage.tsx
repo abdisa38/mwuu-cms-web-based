@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Building2, Search, Filter, Download, HelpCircle, Archive, ShieldCheck, Settings, RefreshCw } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { CompletedKPIs } from "./components/CompletedKPIs";
-import { registrarService } from "../../../../services/registrarService";
-import { ClearanceRequest } from "../../../../services/clearanceService";
+import { registrarService } from "@/app/services/registrarService";
+import { ClearanceRequest } from "@/app/services/clearanceService";
 import { toast } from "sonner";
 
 export function CompletedClearancesPage() {

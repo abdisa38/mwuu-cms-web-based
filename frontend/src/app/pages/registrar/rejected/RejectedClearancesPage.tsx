@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Search, RefreshCw, XCircle } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { RejectedKPIs } from "./components/RejectedKPIs";
-import { registrarService } from "../../../../services/registrarService";
-import { ClearanceRequest } from "../../../../services/clearanceService";
+import { registrarService } from "@/app/services/registrarService";
+import { ClearanceRequest } from "@/app/services/clearanceService";
 import { toast } from "sonner";
 
 export function RejectedClearancesPage() {
