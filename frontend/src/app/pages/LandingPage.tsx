@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Button } from "@/app/components/ui/Button";
-import { ArrowRight, CheckCircle2, Shield, Zap, FileText } from "lucide-react";
+import { ArrowRight, CheckCircle2, Shield, Zap, FileText, HelpCircle, ChevronRight } from "lucide-react";
 
 export function LandingPage() {
   return (
@@ -30,9 +30,11 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-base bg-white">
-              Learn More
-            </Button>
+            <Link to="/faq">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-base bg-white">
+                Learn More & FAQs
+              </Button>
+            </Link>
           </div>
           
           <div className="mt-20 flex flex-wrap justify-center gap-x-12 gap-y-8 text-slate-500">
@@ -85,7 +87,29 @@ export function LandingPage() {
               title="Secure Authentication"
               description="Enterprise-grade security protecting your personal data and university records."
             />
+            <FeatureCard 
+              icon={<HelpCircle className="w-6 h-6 text-purple-500" />}
+              title="Clear Guidance & FAQs"
+              description="Comprehensive knowledge base and guides for graduation, withdrawals, and department sign-offs."
+            />
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Teaser Section */}
+      <section className="w-full py-20 bg-slate-50 border-t border-slate-200">
+        <div className="container px-4 md:px-6 mx-auto max-w-5xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-slate-600 text-base max-w-2xl mx-auto mb-8">
+            Have questions about student clearance, library book returns, dormitory clearances, or digital certificates?
+          </p>
+          <Link to="/faq">
+            <Button size="lg" variant="outline" className="bg-white border-blue-200 text-blue-600 hover:bg-blue-50">
+              View All Questions & Answers <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
         </div>
       </section>
       

@@ -6,11 +6,15 @@ import {
   ChevronRight, Save, HelpCircle, GraduationCap, XOctagon, 
   ArrowRightLeft, AlertTriangle, Briefcase, FileText, UploadCloud,
   CheckCircle2, Clock, X, Info, ShieldCheck,
-  ChevronLeft, FileCheck2
+  ChevronLeft, FileCheck2, ChevronDown
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { clearanceService, ClearanceRequest } from "../../services/clearanceService";
 import { toast } from "sonner";
+
+// Elastic Ethiopian Calendar (E.C.) Years Generation
+const ADMISSION_YEARS = Array.from({ length: 26 }, (_, i) => `${2005 + i} E.C.`);
+const GRADUATION_YEARS = Array.from({ length: 26 }, (_, i) => `${2010 + i} E.C.`);
 
 export function StartNewClearance() {
   const navigate = useNavigate();
@@ -22,18 +26,18 @@ export function StartNewClearance() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [createdClearance, setCreatedClearance] = useState<ClearanceRequest | null>(null);
 
-  // Form State
+  // Form State - Real Dynamic Defaults without Mock Fillers
   const [formData, setFormData] = useState({
-    phone: user?.phone || "+251 91 234 5678",
-    emergencyContactName: user?.emergencyContact?.name || "Abebe Kebede",
-    emergencyPhone: user?.emergencyContact?.phone || "+251 92 111 2233",
-    currentAddress: user?.emergencyContact?.address || "Robe Town, Kebele 02",
-    reason: "Standard exit clearance application",
-    admissionYear: user?.academicInfo?.admissionYear || "2013",
-    expectedGraduation: user?.academicInfo?.expectedGraduation || "2017",
+    phone: user?.phone || "",
+    emergencyContactName: user?.emergencyContact?.name || "",
+    emergencyPhone: user?.emergencyContact?.phone || "",
+    currentAddress: user?.emergencyContact?.address || "",
+    reason: "",
+    admissionYear: user?.academicInfo?.admissionYear || "2014 E.C.",
+    expectedGraduation: user?.academicInfo?.expectedGraduation || "2018 E.C.",
     currentSemester: user?.academicInfo?.currentSemester || "Semester II",
-    cgpa: user?.academicInfo?.cgpa ? String(user.academicInfo.cgpa) : "3.82",
-    advisorName: user?.academicInfo?.advisor || "Dr. Abebe Kebede",
+    cgpa: user?.academicInfo?.cgpa ? String(user.academicInfo.cgpa) : "",
+    advisorName: user?.academicInfo?.advisor || "",
   });
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -41,6 +45,21 @@ export function StartNewClearance() {
   const totalSteps = 5; // Step 6 is success
 
   const nextStep = () => {
+    if (step === 2) {
+      if (!formData.phone.trim() || !formData.emergencyContactName.trim() || !formData.emergencyPhone.trim() || !formData.currentAddress.trim()) {
+        toast.error("Please fill in all required contact and emergency details.");
+        return;
+      }
+      if (!formData.reason.trim()) {
+        toast.error("Please specify your reason for requesting clearance.");
+        return;
+      }
+    } else if (step === 3) {
+      if (!formData.admissionYear || !formData.currentSemester) {
+        toast.error("Please provide your admission year and current semester.");
+        return;
+      }
+    }
     if (step < totalSteps) setStep(step + 1);
   };
   
@@ -71,16 +90,16 @@ export function StartNewClearance() {
     try {
       const data = new FormData();
       data.append("clearanceType", clearanceType);
-      data.append("reason", formData.reason);
-      data.append("phone", formData.phone);
-      data.append("emergencyContactName", formData.emergencyContactName);
-      data.append("emergencyPhone", formData.emergencyPhone);
-      data.append("currentAddress", formData.currentAddress);
+      data.append("reason", formData.reason.trim());
+      data.append("phone", formData.phone.trim());
+      data.append("emergencyContactName", formData.emergencyContactName.trim());
+      data.append("emergencyPhone", formData.emergencyPhone.trim());
+      data.append("currentAddress", formData.currentAddress.trim());
       data.append("admissionYear", formData.admissionYear);
       data.append("expectedGraduation", formData.expectedGraduation);
       data.append("currentSemester", formData.currentSemester);
-      data.append("cgpa", formData.cgpa);
-      data.append("advisorName", formData.advisorName);
+      if (formData.cgpa) data.append("cgpa", formData.cgpa);
+      if (formData.advisorName) data.append("advisorName", formData.advisorName.trim());
 
       uploadedFiles.forEach(file => {
         data.append("documents", file);
@@ -220,59 +239,81 @@ export function StartNewClearance() {
                 <div className="space-y-8 animate-in slide-in-from-right-4 fade-in">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Student Information</h2>
-                    <p className="text-slate-600">Verify your details and provide contact information.</p>
+                    <p className="text-slate-600">Verify your university academic profile and provide your contact details.</p>
                   </div>
 
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
                     <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 flex items-center">
-                      <ShieldCheck className="w-4 h-4 mr-2 text-emerald-600" /> University Records (Auto-filled)
+                      <ShieldCheck className="w-4 h-4 mr-2 text-emerald-600" /> Official University Records
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Full Name</p>
-                        <p className="font-medium text-slate-900">{user?.name || "Student"}</p>
+                        <p className="font-semibold text-slate-900">{user?.name || "Student Name"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Student ID</p>
-                        <p className="font-medium text-slate-900">{user?.studentId || "UGR/1234/12"}</p>
+                        <p className="font-semibold text-slate-900">{user?.studentId || "Student ID"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">University Email</p>
-                        <p className="font-medium text-slate-900">{user?.email || "student@mwu.edu.et"}</p>
+                        <p className="font-semibold text-slate-900">{user?.email || "student@mwu.edu.et"}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">College</p>
-                        <p className="font-medium text-slate-900">{user?.college || "College of Computing"}</p>
+                        <p className="text-xs text-slate-500 mb-1">College / Faculty</p>
+                        <p className="font-semibold text-slate-900">{user?.college || "College of Computing"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Department</p>
-                        <p className="font-medium text-slate-900">{user?.department || "Computer Science"}</p>
+                        <p className="font-semibold text-slate-900">{user?.department || "Computer Science"}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Program</p>
-                        <p className="font-medium text-slate-900">{user?.program || "Undergraduate Regular"}</p>
+                        <p className="text-xs text-slate-500 mb-1">Academic Program</p>
+                        <p className="font-semibold text-slate-900">{user?.program || "Undergraduate Regular"}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-5">
-                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-2">Contact Details</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Applicant Contact & Emergency Information
+                    </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Current Phone Number <span className="text-red-500">*</span></label>
-                        <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
+                        <Input 
+                          value={formData.phone} 
+                          onChange={e => setFormData({ ...formData, phone: e.target.value })} 
+                          placeholder="e.g. 0912345678"
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Emergency Contact Name <span className="text-red-500">*</span></label>
-                        <Input value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} required />
+                        <Input 
+                          value={formData.emergencyContactName} 
+                          onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} 
+                          placeholder="e.g. Parent / Guardian Full Name"
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Emergency Phone Number <span className="text-red-500">*</span></label>
-                        <Input value={formData.emergencyPhone} onChange={e => setFormData({ ...formData, emergencyPhone: e.target.value })} required />
+                        <Input 
+                          value={formData.emergencyPhone} 
+                          onChange={e => setFormData({ ...formData, emergencyPhone: e.target.value })} 
+                          placeholder="e.g. 0911223344"
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-900">Current Address <span className="text-red-500">*</span></label>
-                        <Input value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })} required />
+                        <label className="text-sm font-medium text-slate-900">Current Address / Residence <span className="text-red-500">*</span></label>
+                        <Input 
+                          value={formData.currentAddress} 
+                          onChange={e => setFormData({ ...formData, currentAddress: e.target.value })} 
+                          placeholder="e.g. Robe Town, Kebele 02 / Campus Dorm"
+                          required 
+                        />
                       </div>
                     </div>
                     
@@ -282,7 +323,8 @@ export function StartNewClearance() {
                         required
                         value={formData.reason}
                         onChange={e => setFormData({ ...formData, reason: e.target.value })}
-                        className="w-full min-h-[100px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        placeholder="Please state your specific reason for applying for clearance (e.g. Completed Bachelor degree requirements, temporary withdrawal, program transfer, etc.)..."
+                        className="w-full min-h-[100px] p-3 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-900 placeholder:text-slate-400"
                       ></textarea>
                     </div>
                   </div>
@@ -294,58 +336,85 @@ export function StartNewClearance() {
                 <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Academic Information</h2>
-                    <p className="text-slate-600">Provide details regarding your academic status.</p>
+                    <p className="text-slate-600">Provide details regarding your enrollment and academic timeline in Ethiopian Calendar (E.C.).</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Admission Year with Elastic Range */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-900">Admission Year <span className="text-red-500">*</span></label>
-                      <select 
-                        value={formData.admissionYear} 
-                        onChange={e => setFormData({ ...formData, admissionYear: e.target.value })}
-                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                      >
-                        <option value="2012">2012 E.C.</option>
-                        <option value="2013">2013 E.C.</option>
-                        <option value="2014">2014 E.C.</option>
-                        <option value="2015">2015 E.C.</option>
-                      </select>
+                      <label className="text-sm font-medium text-slate-900">Admission Year (E.C.) <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <select 
+                          value={formData.admissionYear} 
+                          onChange={e => setFormData({ ...formData, admissionYear: e.target.value })}
+                          className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 appearance-none shadow-sm cursor-pointer"
+                        >
+                          {ADMISSION_YEARS.map((yr) => (
+                            <option key={yr} value={yr}>
+                              {yr}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
+
+                    {/* Expected Graduation Year with Elastic Range */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-900">Expected Graduation Year</label>
-                      <select 
-                        value={formData.expectedGraduation} 
-                        onChange={e => setFormData({ ...formData, expectedGraduation: e.target.value })}
-                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                      >
-                        <option value="2016">2016 E.C.</option>
-                        <option value="2017">2017 E.C.</option>
-                      </select>
+                      <label className="text-sm font-medium text-slate-900">Expected Graduation Year (E.C.) <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <select 
+                          value={formData.expectedGraduation} 
+                          onChange={e => setFormData({ ...formData, expectedGraduation: e.target.value })}
+                          className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 appearance-none shadow-sm cursor-pointer"
+                        >
+                          {GRADUATION_YEARS.map((yr) => (
+                            <option key={yr} value={yr}>
+                              {yr}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
+
+                    {/* Current Semester */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-900">Current Semester <span className="text-red-500">*</span></label>
-                      <select 
-                        value={formData.currentSemester} 
-                        onChange={e => setFormData({ ...formData, currentSemester: e.target.value })}
-                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                      >
-                        <option value="Semester I">Semester I</option>
-                        <option value="Semester II">Semester II</option>
-                        <option value="Summer">Summer</option>
-                      </select>
+                      <div className="relative">
+                        <select 
+                          value={formData.currentSemester} 
+                          onChange={e => setFormData({ ...formData, currentSemester: e.target.value })}
+                          className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 appearance-none shadow-sm cursor-pointer"
+                        >
+                          <option value="Semester I">Semester I</option>
+                          <option value="Semester II">Semester II</option>
+                          <option value="Summer (Kiremt)">Summer (Kiremt)</option>
+                          <option value="Final Term">Final Term / Graduation</option>
+                        </select>
+                        <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
+
+                    {/* Latest CGPA */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-900">Latest CGPA</label>
+                      <label className="text-sm font-medium text-slate-900">Latest CGPA (Optional)</label>
                       <Input 
                         type="number" 
                         step="0.01" 
+                        min="0"
+                        max="4.00"
+                        placeholder="e.g. 3.65"
                         value={formData.cgpa} 
                         onChange={e => setFormData({ ...formData, cgpa: e.target.value })} 
                       />
                     </div>
+
+                    {/* Academic Advisor Name */}
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-medium text-slate-900">Academic Advisor Name</label>
+                      <label className="text-sm font-medium text-slate-900">Academic Advisor Name (Optional)</label>
                       <Input 
+                        placeholder="e.g. Dr. / Mr. / Ms. [Advisor's Full Name]"
                         value={formData.advisorName} 
                         onChange={e => setFormData({ ...formData, advisorName: e.target.value })} 
                       />
@@ -364,9 +433,9 @@ export function StartNewClearance() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-1 space-y-4">
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 text-sm text-blue-800">
+                      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3 text-sm text-blue-800">
                         <Info className="w-5 h-5 shrink-0 text-blue-600" />
-                        <p>Accepted formats: JPG, PNG, PDF. Files are uploaded directly to the university cloud.</p>
+                        <p>Accepted formats: JPG, PNG, PDF. Files are uploaded directly to the university cloud storage.</p>
                       </div>
                     </div>
 
@@ -413,40 +482,40 @@ export function StartNewClearance() {
                     <p className="text-slate-600">Please review all information before submitting your clearance request.</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-                      <h3 className="font-semibold text-slate-900">Summary</h3>
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="font-semibold text-slate-900">Application Summary</h3>
                       <button type="button" onClick={() => setStep(1)} className="text-sm text-blue-600 font-medium hover:underline">Edit</button>
                     </div>
                     
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/30">
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
                       <div className="space-y-4">
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Clearance Type</p>
-                          <p className="font-medium text-slate-900 flex items-center capitalize">
+                          <p className="font-semibold text-slate-900 flex items-center capitalize">
                             <GraduationCap className="w-4 h-4 mr-2 text-blue-600" />
                             {clearanceType} Clearance
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Student</p>
-                          <p className="font-medium text-slate-900">{user?.name} ({user?.studentId})</p>
+                          <p className="font-semibold text-slate-900">{user?.name} ({user?.studentId})</p>
+                          <p className="text-xs text-slate-600">{user?.department} • {user?.college}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Contact</p>
-                          <p className="text-slate-900 text-sm">{formData.phone}</p>
-                          <p className="text-slate-900 text-sm">{user?.email}</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Contact & Emergency</p>
+                          <p className="text-slate-900 text-sm">Phone: {formData.phone}</p>
+                          <p className="text-slate-900 text-sm">Emergency Contact: {formData.emergencyContactName} ({formData.emergencyPhone})</p>
+                          <p className="text-slate-900 text-sm">Address: {formData.currentAddress}</p>
                         </div>
                       </div>
                       
                       <div className="space-y-4">
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Departments</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {['Library', 'Dormitory', 'Cafeteria', 'Bookstore', 'Department Head', 'Registrar'].map(dept => (
-                              <span key={dept} className="bg-white border border-slate-200 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 shadow-sm">{dept}</span>
-                            ))}
-                          </div>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Academic Timeline</p>
+                          <p className="text-slate-900 text-sm">Admission: {formData.admissionYear} | Expected: {formData.expectedGraduation}</p>
+                          <p className="text-slate-900 text-sm">Semester: {formData.currentSemester}</p>
+                          {formData.advisorName && <p className="text-slate-900 text-sm">Advisor: {formData.advisorName}</p>}
                         </div>
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Attached Files</p>
@@ -465,7 +534,7 @@ export function StartNewClearance() {
                         </div>
                         <div className="text-sm text-slate-700">
                           <span className="font-semibold text-slate-900 block mb-0.5">Declaration of Truth</span>
-                          I hereby declare that all the information provided is correct and complete.
+                          I hereby declare that all information provided is accurate and all unreturned university materials will be cleared.
                         </div>
                       </label>
                     </div>
