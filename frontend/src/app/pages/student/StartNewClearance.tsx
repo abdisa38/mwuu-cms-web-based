@@ -5,16 +5,38 @@ import { Input } from "@/app/components/ui/Input";
 import {
   ChevronRight, Save, HelpCircle, GraduationCap, XOctagon, 
   ArrowRightLeft, AlertTriangle, Briefcase, FileText, UploadCloud,
-  CheckCircle2, Clock, CheckSquare, X, Info, ShieldCheck,
+  CheckCircle2, Clock, X, Info, ShieldCheck,
   ChevronLeft, FileCheck2
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { clearanceService, ClearanceRequest } from "../../services/clearanceService";
+import { toast } from "sonner";
 
 export function StartNewClearance() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [step, setStep] = useState(1);
-  const [clearanceType, setClearanceType] = useState("");
+  const [clearanceType, setClearanceType] = useState("graduation");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [createdClearance, setCreatedClearance] = useState<ClearanceRequest | null>(null);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    phone: user?.phone || "+251 91 234 5678",
+    emergencyContactName: user?.emergencyContact?.name || "Abebe Kebede",
+    emergencyPhone: user?.emergencyContact?.phone || "+251 92 111 2233",
+    currentAddress: user?.emergencyContact?.address || "Robe Town, Kebele 02",
+    reason: "Standard exit clearance application",
+    admissionYear: user?.academicInfo?.admissionYear || "2013",
+    expectedGraduation: user?.academicInfo?.expectedGraduation || "2017",
+    currentSemester: user?.academicInfo?.currentSemester || "Semester II",
+    cgpa: user?.academicInfo?.cgpa ? String(user.academicInfo.cgpa) : "3.82",
+    advisorName: user?.academicInfo?.advisor || "Dr. Abebe Kebede",
+  });
+
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const totalSteps = 5; // Step 6 is success
 
@@ -28,15 +50,51 @@ export function StartNewClearance() {
 
   const saveDraft = () => {
     setLastSaved(new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
+    toast.info("Draft saved locally.");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const filesArr = Array.from(e.target.files);
+      setUploadedFiles(prev => [...prev, ...filesArr]);
+      toast.success(`${filesArr.length} file(s) attached.`);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const data = new FormData();
+      data.append("clearanceType", clearanceType);
+      data.append("reason", formData.reason);
+      data.append("phone", formData.phone);
+      data.append("emergencyContactName", formData.emergencyContactName);
+      data.append("emergencyPhone", formData.emergencyPhone);
+      data.append("currentAddress", formData.currentAddress);
+      data.append("admissionYear", formData.admissionYear);
+      data.append("expectedGraduation", formData.expectedGraduation);
+      data.append("currentSemester", formData.currentSemester);
+      data.append("cgpa", formData.cgpa);
+      data.append("advisorName", formData.advisorName);
+
+      uploadedFiles.forEach(file => {
+        data.append("documents", file);
+      });
+
+      const res = await clearanceService.submitClearance(data);
+      setCreatedClearance(res.clearance);
+      toast.success("Clearance request successfully submitted to the university!");
       setStep(6); // Success Step
-    }, 2000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit clearance.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const clearanceTypes = [
@@ -78,9 +136,6 @@ export function StartNewClearance() {
             <Button variant="outline" className="bg-white border-slate-200 shadow-sm flex-1 md:flex-none" onClick={saveDraft}>
               <Save className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Save Draft</span>
             </Button>
-            <Button variant="outline" className="bg-white border-slate-200 shadow-sm flex-1 md:flex-none text-slate-600">
-              <HelpCircle className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Help</span>
-            </Button>
             <Button variant="ghost" className="text-slate-500 hover:text-red-600 hover:bg-red-50" onClick={() => navigate('/student')}>
               <X className="w-4 h-4" />
             </Button>
@@ -121,11 +176,6 @@ export function StartNewClearance() {
               })}
             </div>
           </div>
-          {/* Mobile Stepper */}
-          <div className="md:hidden px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-900">Step {step} of {totalSteps}</span>
-            <span className="text-sm font-medium text-blue-600">{steps[step-1]}</span>
-          </div>
 
           <div className="p-6 md:p-8 flex-1 min-h-[400px]">
             <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="h-full">
@@ -135,7 +185,7 @@ export function StartNewClearance() {
                 <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Select Clearance Type</h2>
-                    <p className="text-slate-600">Choose the type of clearance you are applying for. This will determine your workflow.</p>
+                    <p className="text-slate-600">Choose the type of clearance you are applying for.</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {clearanceTypes.map((type) => (
@@ -180,27 +230,27 @@ export function StartNewClearance() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Full Name</p>
-                        <p className="font-medium text-slate-900">John Doe</p>
+                        <p className="font-medium text-slate-900">{user?.name || "Student"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Student ID</p>
-                        <p className="font-medium text-slate-900">UGR/1234/12</p>
+                        <p className="font-medium text-slate-900">{user?.studentId || "UGR/1234/12"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">University Email</p>
-                        <p className="font-medium text-slate-900">john.doe@mwu.edu.et</p>
+                        <p className="font-medium text-slate-900">{user?.email || "student@mwu.edu.et"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">College</p>
-                        <p className="font-medium text-slate-900">College of Computing</p>
+                        <p className="font-medium text-slate-900">{user?.college || "College of Computing"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Department</p>
-                        <p className="font-medium text-slate-900">Computer Science</p>
+                        <p className="font-medium text-slate-900">{user?.department || "Computer Science"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 mb-1">Program</p>
-                        <p className="font-medium text-slate-900">Undergraduate Regular</p>
+                        <p className="font-medium text-slate-900">{user?.program || "Undergraduate Regular"}</p>
                       </div>
                     </div>
                   </div>
@@ -210,30 +260,28 @@ export function StartNewClearance() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Current Phone Number <span className="text-red-500">*</span></label>
-                        <Input defaultValue="+251 91 234 5678" required />
+                        <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Emergency Contact Name <span className="text-red-500">*</span></label>
-                        <Input placeholder="e.g. Abebe Kebede" required />
+                        <Input value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Emergency Phone Number <span className="text-red-500">*</span></label>
-                        <Input placeholder="e.g. +251 92..." required />
+                        <Input value={formData.emergencyPhone} onChange={e => setFormData({ ...formData, emergencyPhone: e.target.value })} required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-900">Current Address <span className="text-red-500">*</span></label>
-                        <Input placeholder="City, Sub-city, Woreda" required />
+                        <Input value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })} required />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-900 flex justify-between">
-                        <span>Reason for Clearance <span className="text-red-500">*</span></span>
-                        <span className="text-xs text-slate-400">Max 200 characters</span>
-                      </label>
+                      <label className="text-sm font-medium text-slate-900">Reason for Clearance <span className="text-red-500">*</span></label>
                       <textarea 
                         required
-                        placeholder="Provide any additional context for your clearance..." 
+                        value={formData.reason}
+                        onChange={e => setFormData({ ...formData, reason: e.target.value })}
                         className="w-full min-h-[100px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       ></textarea>
                     </div>
@@ -252,8 +300,11 @@ export function StartNewClearance() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-900">Admission Year <span className="text-red-500">*</span></label>
-                      <select required className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900">
-                        <option value="">Select Year</option>
+                      <select 
+                        value={formData.admissionYear} 
+                        onChange={e => setFormData({ ...formData, admissionYear: e.target.value })}
+                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
+                      >
                         <option value="2012">2012 E.C.</option>
                         <option value="2013">2013 E.C.</option>
                         <option value="2014">2014 E.C.</option>
@@ -262,28 +313,42 @@ export function StartNewClearance() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-900">Expected Graduation Year</label>
-                      <select className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900">
-                        <option value="">Select Year</option>
-                        <option value="2016" selected>2016 E.C.</option>
+                      <select 
+                        value={formData.expectedGraduation} 
+                        onChange={e => setFormData({ ...formData, expectedGraduation: e.target.value })}
+                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
+                      >
+                        <option value="2016">2016 E.C.</option>
                         <option value="2017">2017 E.C.</option>
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-900">Current Semester <span className="text-red-500">*</span></label>
-                      <select required className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900">
-                        <option value="">Select Semester</option>
-                        <option value="1">Semester I</option>
-                        <option value="2" selected>Semester II</option>
-                        <option value="summer">Summer</option>
+                      <select 
+                        value={formData.currentSemester} 
+                        onChange={e => setFormData({ ...formData, currentSemester: e.target.value })}
+                        className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
+                      >
+                        <option value="Semester I">Semester I</option>
+                        <option value="Semester II">Semester II</option>
+                        <option value="Summer">Summer</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-900">Latest CGPA (Optional)</label>
-                      <Input type="number" step="0.01" min="0" max="4" placeholder="e.g. 3.45" />
+                      <label className="text-sm font-medium text-slate-900">Latest CGPA</label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        value={formData.cgpa} 
+                        onChange={e => setFormData({ ...formData, cgpa: e.target.value })} 
+                      />
                     </div>
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-sm font-medium text-slate-900">Academic Advisor Name (Optional)</label>
-                      <Input placeholder="e.g. Dr. Abebe Kebede" />
+                      <label className="text-sm font-medium text-slate-900">Academic Advisor Name</label>
+                      <Input 
+                        value={formData.advisorName} 
+                        onChange={e => setFormData({ ...formData, advisorName: e.target.value })} 
+                      />
                     </div>
                   </div>
                 </div>
@@ -294,73 +359,47 @@ export function StartNewClearance() {
                 <div className="space-y-8 animate-in slide-in-from-right-4 fade-in">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Required Documents</h2>
-                    <p className="text-slate-600">Upload all necessary documents to support your clearance request.</p>
+                    <p className="text-slate-600">Attach student identification or supporting files.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Document Checklist */}
                     <div className="md:col-span-1 space-y-4">
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-                        <h3 className="font-semibold text-slate-900 mb-4">Checklist</h3>
-                        <ul className="space-y-3">
-                          <li className="flex items-center gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                            <span className="text-sm font-medium text-slate-700">Student ID Copy</span>
-                          </li>
-                          <li className="flex items-center gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                            <span className="text-sm font-medium text-slate-700">Profile Photo</span>
-                          </li>
-                          <li className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-amber-500 shrink-0" />
-                            <span className="text-sm font-medium text-slate-700">Supporting Letter <span className="text-red-500">*</span></span>
-                          </li>
-                        </ul>
-                      </div>
-                      
                       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 text-sm text-blue-800">
                         <Info className="w-5 h-5 shrink-0 text-blue-600" />
-                        <p>Accepted formats: JPG, PNG, PDF. Maximum file size: 5MB per file.</p>
+                        <p>Accepted formats: JPG, PNG, PDF. Files are uploaded directly to the university cloud.</p>
                       </div>
                     </div>
 
-                    {/* Upload Area */}
                     <div className="md:col-span-2 space-y-6">
-                      <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer bg-white h-48">
-                        <UploadCloud className="w-10 h-10 text-blue-500 mb-3" />
-                        <p className="text-base font-semibold text-slate-900">Drag & drop files here</p>
-                        <p className="text-sm text-slate-500 mt-1 mb-4">or click to browse from your computer</p>
-                        <Button size="sm" variant="outline" className="bg-white">Browse Files</Button>
-                      </div>
+                      <label className="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer bg-white h-48 block">
+                        <UploadCloud className="w-10 h-10 text-blue-500 mb-3 mx-auto" />
+                        <p className="text-base font-semibold text-slate-900">Click or browse to attach files</p>
+                        <p className="text-sm text-slate-500 mt-1">Student ID Card, Profile Photo, Supporting letter</p>
+                        <input type="file" multiple onChange={handleFileChange} className="hidden" />
+                      </label>
 
                       {/* Uploaded Files Preview */}
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-semibold text-slate-900">Uploaded Files</h4>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between group hover:border-emerald-300 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
-                              <FileText className="w-5 h-5" />
+                      {uploadedFiles.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold text-slate-900">Attached Files ({uploadedFiles.length})</h4>
+                          {uploadedFiles.map((file, idx) => (
+                            <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
+                                  <FileText className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                                  <p className="text-xs text-slate-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                                </div>
+                              </div>
+                              <button type="button" onClick={() => removeFile(idx)} className="p-2 text-slate-400 hover:text-red-500">
+                                <X className="w-4 h-4" />
+                              </button>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">Student_ID_Scanned.jpg</p>
-                              <p className="text-xs text-slate-500">1.2 MB • Upload complete</p>
-                            </div>
-                          </div>
-                          <button className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+                          ))}
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between group hover:border-emerald-300 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
-                              <FileText className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">Profile_Photo_Recent.png</p>
-                              <p className="text-xs text-slate-500">2.4 MB • Upload complete</p>
-                            </div>
-                          </div>
-                          <button className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -377,44 +416,41 @@ export function StartNewClearance() {
                   <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-slate-200 flex justify-between items-center">
                       <h3 className="font-semibold text-slate-900">Summary</h3>
-                      <button onClick={() => setStep(1)} className="text-sm text-blue-600 font-medium hover:underline">Edit Request</button>
+                      <button type="button" onClick={() => setStep(1)} className="text-sm text-blue-600 font-medium hover:underline">Edit</button>
                     </div>
                     
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/30">
                       <div className="space-y-4">
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Clearance Type</p>
-                          <p className="font-medium text-slate-900 flex items-center">
+                          <p className="font-medium text-slate-900 flex items-center capitalize">
                             <GraduationCap className="w-4 h-4 mr-2 text-blue-600" />
-                            Graduation Clearance
+                            {clearanceType} Clearance
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Student Name</p>
-                          <p className="font-medium text-slate-900">John Doe (UGR/1234/12)</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Student</p>
+                          <p className="font-medium text-slate-900">{user?.name} ({user?.studentId})</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Contact Details</p>
-                          <p className="text-slate-900 text-sm">+251 91 234 5678</p>
-                          <p className="text-slate-900 text-sm">john.doe@mwu.edu.et</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Contact</p>
+                          <p className="text-slate-900 text-sm">{formData.phone}</p>
+                          <p className="text-slate-900 text-sm">{user?.email}</p>
                         </div>
                       </div>
                       
                       <div className="space-y-4">
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Required Departments</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Departments</p>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            {['Library', 'Dormitory', 'Cafeteria', 'Bookstore', 'Dept. Head', 'Registrar'].map(dept => (
+                            {['Library', 'Dormitory', 'Cafeteria', 'Bookstore', 'Department Head', 'Registrar'].map(dept => (
                               <span key={dept} className="bg-white border border-slate-200 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 shadow-sm">{dept}</span>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Expected Processing Time</p>
-                          <p className="font-medium text-slate-900 flex items-center">
-                            <Clock className="w-4 h-4 mr-2 text-amber-500" />
-                            3 - 5 Business Days
-                          </p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">Attached Files</p>
+                          <p className="text-sm text-slate-800">{uploadedFiles.length} file(s) attached</p>
                         </div>
                       </div>
                     </div>
@@ -429,7 +465,7 @@ export function StartNewClearance() {
                         </div>
                         <div className="text-sm text-slate-700">
                           <span className="font-semibold text-slate-900 block mb-0.5">Declaration of Truth</span>
-                          I hereby declare that all the information provided is correct and complete. I understand that any false information may lead to the rejection of my clearance and disciplinary action.
+                          I hereby declare that all the information provided is correct and complete.
                         </div>
                       </label>
                     </div>
@@ -439,28 +475,27 @@ export function StartNewClearance() {
 
               {/* Form Navigation Footer */}
               <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    onClick={prevStep}
-                    disabled={step === 1 || isSubmitting}
-                    className={`${step === 1 ? 'invisible' : ''} text-slate-600`}
-                  >
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={prevStep}
+                  disabled={step === 1 || isSubmitting}
+                  className={`${step === 1 ? 'invisible' : ''} text-slate-600`}
+                >
                   <ChevronLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
 
                 {step < totalSteps ? (
                   <Button 
                     type="submit" 
-                    className="bg-blue-600 hover:bg-blue-700 shadow-sm px-6"
-                    disabled={step === 1 && !clearanceType}
+                    className="bg-blue-600 hover:bg-blue-700 shadow-sm px-6 text-white"
                   >
                     Continue <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 ) : (
                   <Button 
                     type="submit" 
-                    className="bg-emerald-600 hover:bg-emerald-700 shadow-sm px-8"
+                    className="bg-emerald-600 hover:bg-emerald-700 shadow-sm px-8 text-white"
                     isLoading={isSubmitting}
                   >
                     Submit Clearance Request
@@ -475,35 +510,32 @@ export function StartNewClearance() {
       {/* STEP 6: Success Page */}
       {step === 6 && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-10 text-center animate-in zoom-in-95 duration-500 max-w-2xl mx-auto my-12 relative overflow-hidden">
-          {/* Confetti-like decorative elements */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-64 bg-gradient-to-b from-emerald-50 to-transparent pointer-events-none" />
-          
           <div className="relative z-10">
             <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center animate-bounce shadow-md">
+              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-md">
                 <CheckCircle2 className="w-10 h-10 text-white" />
               </div>
             </div>
             
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Request Submitted Successfully!</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Clearance Application Submitted!</h2>
             <p className="text-lg text-slate-600 mb-8">
-              Your clearance request has been forwarded to the respective departments. You will receive notifications as it progresses.
+              Your clearance request has been officially recorded in the MWU database and forwarded to all relevant departments.
             </p>
 
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-left mb-8 space-y-4">
               <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                 <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Request Number</span>
-                <span className="font-bold text-lg text-blue-900">REQ-2024-8933</span>
+                <span className="font-bold text-lg text-blue-900">{createdClearance?.requestId || "REQ-2026-8932"}</span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-200 pb-4">
                 <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Clearance Type</span>
-                <span className="font-semibold text-slate-900">Graduation</span>
+                <span className="font-semibold text-slate-900 capitalize">{createdClearance?.clearanceType || clearanceType}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Current Status</span>
+                <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Status</span>
                 <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-sm font-semibold text-amber-700">
                   <span className="flex h-2 w-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
-                  Pending Review
+                  Pending Department Review
                 </span>
               </div>
             </div>
@@ -512,7 +544,7 @@ export function StartNewClearance() {
               <Button variant="outline" className="bg-white h-12 px-6" onClick={() => navigate('/student')}>
                 Return to Dashboard
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700 h-12 px-6 shadow-md" onClick={() => navigate('/student/clearance')}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 shadow-md" onClick={() => navigate('/student/clearance')}>
                 <FileCheck2 className="w-5 h-5 mr-2" /> Track My Clearance
               </Button>
             </div>

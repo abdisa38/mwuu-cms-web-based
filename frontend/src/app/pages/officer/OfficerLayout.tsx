@@ -18,28 +18,41 @@ import {
   Menu,
   Moon
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { officerService } from "../../services/officerService";
 
 export function OfficerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    officerService.getDashboard()
+      .then(res => setPendingCount(res.stats?.pendingCount || 0))
+      .catch(() => {});
+  }, [location.pathname]);
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/officer" },
-    { icon: ClipboardList, label: "Pending Requests", path: "/officer/pending", badge: 12 },
+    { icon: ClipboardList, label: "Pending Requests", path: "/officer/pending", badge: pendingCount > 0 ? pendingCount : undefined },
     { icon: CheckCircle2, label: "Approved", path: "/officer/approved" },
     { icon: XCircle, label: "Rejected", path: "/officer/rejected" },
     { icon: Users, label: "Students", path: "/officer/students" },
-    { icon: Bell, label: "Notifications", path: "/officer/notifications", badge: 5 },
+    { icon: Bell, label: "Notifications", path: "/officer/notifications" },
     { icon: MessageSquare, label: "Messages", path: "/officer/messages" },
-    { icon: BarChart3, label: "Reports", path: "/officer/reports" },
   ];
 
   const bottomNavItems = [
     { icon: User, label: "My Account", path: "/officer/account" },
     { icon: Settings, label: "Settings", path: "/officer/settings" },
   ];
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "OF";
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
@@ -128,7 +141,7 @@ export function OfficerLayout() {
                 </Link>
               );
             })}
-            <button onClick={() => navigate('/login')} className={`flex items-center ${sidebarOpen ? 'px-3' : 'justify-center'} py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors group relative mt-1`}>
+            <button onClick={logout} className={`flex items-center ${sidebarOpen ? 'px-3' : 'justify-center'} py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors group relative mt-1`}>
               <LogOut className="w-5 h-5 text-red-500" />
               {sidebarOpen && <span className="ml-3 font-medium">Log out</span>}
               {!sidebarOpen && (
@@ -154,43 +167,21 @@ export function OfficerLayout() {
                 {navItems.find(i => location.pathname === i.path || (location.pathname.startsWith(i.path) && i.path !== "/officer"))?.label || bottomNavItems.find(i => i.path === location.pathname)?.label || "Dashboard"}
               </h1>
               <div className="text-xs text-slate-500 hidden sm:flex items-center gap-2">
-                <span>Library Department</span>
+                <span className="font-semibold text-blue-600">{user?.department || "Department Desk"}</span>
                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative hidden lg:flex items-center">
-              <Search className="w-4 h-4 absolute left-3 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search students..." 
-                className="pl-9 pr-4 py-2 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none w-64 transition-all"
-              />
-            </div>
-            
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors hidden sm:flex">
-              <Moon className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors hidden sm:flex">
-              <HelpCircle className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
-            
-            <div className="w-px h-6 bg-slate-200 mx-1 sm:mx-2 hidden sm:block"></div>
-            
             <Link to="/officer/account" className="flex items-center gap-2 hover:bg-slate-50 p-1 pr-2 rounded-full transition-colors border border-transparent hover:border-slate-200">
               <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                SO
+                {initials}
               </div>
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium text-slate-900 leading-none">Sarah Officer</span>
-                <span className="text-xs text-slate-500 mt-0.5">Library Head</span>
+                <span className="text-sm font-medium text-slate-900 leading-none">{user?.name || "Officer"}</span>
+                <span className="text-xs text-slate-500 mt-0.5">{user?.department || "Department Head"}</span>
               </div>
             </Link>
           </div>

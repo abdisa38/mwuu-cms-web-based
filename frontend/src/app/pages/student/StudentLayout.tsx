@@ -18,19 +18,29 @@ import {
   Menu,
   Moon
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { notificationService } from "../../services/notificationService";
 
 export function StudentLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    notificationService.getMyNotifications()
+      .then((res) => setUnreadCount(res.unreadCount || 0))
+      .catch(() => {});
+  }, []);
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/student" },
     { icon: FileCheck2, label: "My Clearance", path: "/student/clearance" },
     { icon: PlusCircle, label: "Start New Clearance", path: "/student/new-clearance" },
     { icon: FolderOpen, label: "My Documents", path: "/student/documents" },
-    { icon: Bell, label: "Notifications", path: "/student/notifications", badge: 3 },
+    { icon: Bell, label: "Notifications", path: "/student/notifications", badge: unreadCount > 0 ? unreadCount : undefined },
     { icon: MessageSquare, label: "Messages", path: "/student/messages" },
     { icon: Award, label: "Certificate", path: "/student/certificate" },
   ];
@@ -39,6 +49,10 @@ export function StudentLayout() {
     { icon: User, label: "Profile", path: "/student/profile" },
     { icon: Settings, label: "Settings", path: "/student/settings" },
   ];
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "ST";
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
@@ -127,7 +141,7 @@ export function StudentLayout() {
                 </Link>
               );
             })}
-            <button onClick={() => navigate('/login')} className={`flex items-center ${sidebarOpen ? 'px-3' : 'justify-center'} py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors group relative mt-1`}>
+            <button onClick={logout} className={`flex items-center ${sidebarOpen ? 'px-3' : 'justify-center'} py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors group relative mt-1`}>
               <LogOut className="w-5 h-5 text-red-500" />
               {sidebarOpen && <span className="ml-3 font-medium">Log out</span>}
               {!sidebarOpen && (
@@ -154,37 +168,24 @@ export function StudentLayout() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative hidden lg:flex items-center">
-              <Search className="w-4 h-4 absolute left-3 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="pl-9 pr-4 py-2 bg-slate-100 border-transparent rounded-full text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none w-64 transition-all"
-              />
-            </div>
-            
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors hidden sm:flex">
-              <Moon className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors hidden sm:flex">
-              <HelpCircle className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative">
+            <Link to="/student/notifications" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors relative">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+              )}
+            </Link>
             
             <div className="w-px h-6 bg-slate-200 mx-1 sm:mx-2 hidden sm:block"></div>
             
-            <button className="flex items-center gap-2 hover:bg-slate-50 p-1 pr-2 rounded-full transition-colors border border-transparent hover:border-slate-200">
+            <Link to="/student/profile" className="flex items-center gap-2 hover:bg-slate-50 p-1 pr-2 rounded-full transition-colors border border-transparent hover:border-slate-200">
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                JD
+                {initials}
               </div>
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium text-slate-900 leading-none">John Doe</span>
-                <span className="text-xs text-slate-500 mt-0.5">UGR/1234/12</span>
+                <span className="text-sm font-medium text-slate-900 leading-none">{user?.name || "Student"}</span>
+                <span className="text-xs text-slate-500 mt-0.5">{user?.studentId || "MWU Student"}</span>
               </div>
-            </button>
+            </Link>
           </div>
         </header>
 
@@ -193,33 +194,6 @@ export function StudentLayout() {
           <Outlet />
         </div>
       </main>
-      
-      {/* Mobile Bottom Navigation (optional, just showing layout intention) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 pb-safe z-50">
-        <Link to="/student" className="flex flex-col items-center p-2 text-blue-600">
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] mt-1 font-medium">Home</span>
-        </Link>
-        <Link to="/student/clearance" className="flex flex-col items-center p-2 text-slate-400 hover:text-slate-600">
-          <FileCheck2 className="w-5 h-5" />
-          <span className="text-[10px] mt-1 font-medium">Clearance</span>
-        </Link>
-        <Link to="/student/new-clearance" className="flex flex-col items-center p-2 text-slate-400 hover:text-slate-600">
-          <div className="bg-blue-600 text-white rounded-full p-2 -mt-6 shadow-md border-4 border-slate-50">
-            <PlusCircle className="w-6 h-6" />
-          </div>
-          <span className="text-[10px] mt-1 font-medium">New</span>
-        </Link>
-        <Link to="/student/notifications" className="flex flex-col items-center p-2 text-slate-400 hover:text-slate-600 relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
-          <span className="text-[10px] mt-1 font-medium">Alerts</span>
-        </Link>
-        <Link to="/student/profile" className="flex flex-col items-center p-2 text-slate-400 hover:text-slate-600">
-          <User className="w-5 h-5" />
-          <span className="text-[10px] mt-1 font-medium">Profile</span>
-        </Link>
-      </div>
     </div>
   );
 }
