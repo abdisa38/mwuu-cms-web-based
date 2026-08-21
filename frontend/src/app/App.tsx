@@ -1,44 +1,13 @@
 import { RouterProvider } from "react-router";
 import { router } from "./routes";
+import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "sonner";
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <Toaster richColors position="top-right" />
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR
-// trigger HMR 2
-// trigger HMR
-// trigger HMR
