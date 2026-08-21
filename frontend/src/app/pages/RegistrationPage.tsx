@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
-import { ArrowLeft, ArrowRight, Check, UploadCloud } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, GraduationCap, Building2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { publicService, CollegeDepartmentItem } from "../services/publicService";
 import { toast } from "sonner";
 
 export function RegistrationPage() {
@@ -13,18 +14,57 @@ export function RegistrationPage() {
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Form State
+  const [collegesList, setCollegesList] = useState<CollegeDepartmentItem[]>([]);
+  const [programsList, setProgramsList] = useState<string[]>([]);
+
+  // Form State - Clean Real Defaults
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     studentId: "",
-    college: "College of Computing",
-    department: "Computer Science",
+    college: "",
+    department: "",
+    program: "Undergraduate Regular",
     password: "",
     confirmPassword: "",
   });
+
+  // Fetch real university colleges & departments
+  useEffect(() => {
+    publicService.getCollegesAndDepartments()
+      .then((res) => {
+        if (res.colleges && res.colleges.length > 0) {
+          setCollegesList(res.colleges);
+          const firstCollege = res.colleges[0];
+          setFormData((prev) => ({
+            ...prev,
+            college: prev.college || firstCollege.college,
+            department: prev.department || firstCollege.departments[0] || "",
+          }));
+        }
+        if (res.programs && res.programs.length > 0) {
+          setProgramsList(res.programs);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load academic structure:", err);
+      });
+  }, []);
+
+  const currentCollege = collegesList.find((c) => c.college === formData.college);
+  const availableDepartments = currentCollege?.departments || [];
+
+  const handleCollegeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCollegeName = e.target.value;
+    const foundCollege = collegesList.find((c) => c.college === selectedCollegeName);
+    setFormData({
+      ...formData,
+      college: selectedCollegeName,
+      department: foundCollege?.departments[0] || "",
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,13 +72,13 @@ export function RegistrationPage() {
 
   const nextStep = () => {
     if (step === 1) {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
-        toast.error("Please fill in all personal details.");
+      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+        toast.error("Please fill in all required personal details.");
         return;
       }
     } else if (step === 2) {
-      if (!formData.studentId || !formData.department) {
-        toast.error("Please provide your student ID and department.");
+      if (!formData.studentId.trim() || !formData.college || !formData.department) {
+        toast.error("Please provide your Student ID, College, and Department.");
         return;
       }
     } else if (step === 3) {
@@ -60,13 +100,14 @@ export function RegistrationPage() {
     setLoading(true);
     try {
       const payload = {
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
-        email: formData.email,
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
-        studentId: formData.studentId,
-        department: formData.department,
+        studentId: formData.studentId.trim().toUpperCase(),
         college: formData.college,
-        phone: formData.phone,
+        department: formData.department,
+        program: formData.program,
+        phone: formData.phone.trim(),
       };
 
       const user = await register(payload);
@@ -92,8 +133,8 @@ export function RegistrationPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {/* Progress Header */}
           <div className="border-b border-slate-200 px-8 py-6 bg-slate-50/50">
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Create an account</h1>
-            <p className="text-slate-500 text-sm mb-6">Complete your registration to start the clearance process.</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Create Student Account</h1>
+            <p className="text-slate-500 text-sm mb-6">Complete your registration with real university records to begin digital clearance.</p>
             
             <div className="flex items-center justify-between relative">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full" />
@@ -126,61 +167,114 @@ export function RegistrationPage() {
           <div className="p-8">
             {step === 1 && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">Personal Information</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-4">Personal Details</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2 col-span-2 sm:col-span-1">
                     <label className="text-sm font-medium text-slate-900">First Name <span className="text-red-500">*</span></label>
-                    <Input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required />
+                    <Input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="e.g. Bayya" required />
                   </div>
                   <div className="space-y-2 col-span-2 sm:col-span-1">
-                    <label className="text-sm font-medium text-slate-900">Last Name <span className="text-red-500">*</span></label>
-                    <Input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required />
+                    <label className="text-sm font-medium text-slate-900">Last / Father Name <span className="text-red-500">*</span></label>
+                    <Input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="e.g. Awel" required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">Personal Email <span className="text-red-500">*</span></label>
-                  <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john.doe@example.com" required />
+                  <label className="text-sm font-medium text-slate-900">University / Personal Email <span className="text-red-500">*</span></label>
+                  <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="e.g. student@mwu.edu.et" required />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">Phone Number</label>
-                  <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+251 91 234 5678" />
+                  <label className="text-sm font-medium text-slate-900">Phone Number <span className="text-red-500">*</span></label>
+                  <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="e.g. 0912345678" required />
                 </div>
               </div>
             )}
 
             {step === 2 && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">Academic Information</h2>
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Academic Information</h2>
+                <p className="text-xs text-slate-500 mb-4">Select your registered faculty and department from the university records.</p>
+                
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">Student ID <span className="text-red-500">*</span></label>
-                  <Input name="studentId" value={formData.studentId} onChange={handleChange} placeholder="e.g. UGR/1234/12" required />
+                  <label className="text-sm font-medium text-slate-900">Student ID Number <span className="text-red-500">*</span></label>
+                  <Input name="studentId" value={formData.studentId} onChange={handleChange} placeholder="e.g. Ugr/51234/15" required />
                 </div>
+
+                {/* College / Faculty Dropdown with Dropdown Icon */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">College / Faculty</label>
-                  <Input name="college" value={formData.college} onChange={handleChange} placeholder="College of Computing" />
+                  <label className="text-sm font-medium text-slate-900">College / Faculty <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      name="college"
+                      value={formData.college}
+                      onChange={handleCollegeChange}
+                      required
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                    >
+                      {collegesList.map((col) => (
+                        <option key={col.college} value={col.college}>
+                          {col.college}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
+
+                {/* Department Dropdown with Dropdown Icon */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">Department <span className="text-red-500">*</span></label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    className="w-full h-10 px-3 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                  >
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Information Systems">Information Systems</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Civil Engineering">Civil Engineering</option>
-                    <option value="Medicine">Medicine & Health Science</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="department"
+                      value={formData.department}
+                      onChange={handleChange}
+                      required
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                    >
+                      {availableDepartments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Program Selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-900">Academic Program <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      name="program"
+                      value={formData.program}
+                      onChange={handleChange}
+                      required
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                    >
+                      {(programsList.length > 0 ? programsList : [
+                        "Undergraduate Regular",
+                        "Undergraduate Extension (Evening)",
+                        "Undergraduate Weekend",
+                        "Undergraduate Summer (Kiremt)",
+                        "Postgraduate Regular (Master's)",
+                        "Postgraduate Weekend (Master's)",
+                        "Doctoral Program (PhD)"
+                      ]).map((prog) => (
+                        <option key={prog} value={prog}>
+                          {prog}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
             )}
 
             {step === 3 && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-xl font-semibold text-slate-900 mb-4">Security</h2>
+                <h2 className="text-xl font-semibold text-slate-900 mb-4">Security Password</h2>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">Password <span className="text-red-500">*</span></label>
                   <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
@@ -194,13 +288,16 @@ export function RegistrationPage() {
 
             {step === 4 && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Review & Submit</h2>
-                <p className="text-sm text-slate-500 mb-4">Confirm your details below to create your student clearance account.</p>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2 text-slate-700">
-                  <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
-                  <p><strong>Email:</strong> {formData.email}</p>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Review & Confirm</h2>
+                <p className="text-sm text-slate-500 mb-4">Confirm your details below to create your official MWU clearance account.</p>
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-sm space-y-3 text-slate-700">
+                  <p><strong>Full Name:</strong> {formData.firstName} {formData.lastName}</p>
+                  <p><strong>Email Address:</strong> {formData.email}</p>
+                  <p><strong>Phone Number:</strong> {formData.phone}</p>
                   <p><strong>Student ID:</strong> {formData.studentId}</p>
-                  <p><strong>Department:</strong> {formData.department} ({formData.college})</p>
+                  <p><strong>College / Faculty:</strong> {formData.college}</p>
+                  <p><strong>Department:</strong> {formData.department}</p>
+                  <p><strong>Academic Program:</strong> {formData.program}</p>
                 </div>
               </div>
             )}
@@ -217,12 +314,12 @@ export function RegistrationPage() {
             )}
             
             {step < totalSteps ? (
-              <Button onClick={nextStep} className="bg-slate-900 text-white hover:bg-slate-800 ml-auto">
+              <Button onClick={nextStep} className="bg-blue-600 text-white hover:bg-blue-700 ml-auto">
                 Next Step
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleComplete} isLoading={loading} className="bg-blue-600 text-white hover:bg-blue-700 ml-auto">
+              <Button onClick={handleComplete} isLoading={loading} className="bg-emerald-600 text-white hover:bg-emerald-700 ml-auto">
                 Complete Registration
               </Button>
             )}
