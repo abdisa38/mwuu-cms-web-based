@@ -17,8 +17,8 @@ export function Layout() {
           <nav className="hidden md:flex items-center gap-8 font-medium text-slate-600">
             <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
             <Link to="/verify" className="hover:text-blue-600 transition-colors">Verify Certificate</Link>
-            <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-            <a href="#faq" className="hover:text-blue-600 transition-colors">FAQs</a>
+            <Link to="/#features" className="hover:text-blue-600 transition-colors">Features</Link>
+            <Link to="/faq" className="hover:text-blue-600 transition-colors">FAQs</Link>
           </nav>
           <div className="flex items-center gap-4">
             <Link to="/login">
