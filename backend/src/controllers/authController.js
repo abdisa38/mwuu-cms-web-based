@@ -81,7 +81,8 @@ export const register = async (req, res) => {
 // @access  Public
 export const login = async (req, res) => {
   try {
-    const { identifier, password } = req.body; // identifier can be email or studentId or staffId
+    const identifier = req.body.identifier || req.body.email;
+    const password = req.body.password;
 
     if (!identifier || !password) {
       return res
