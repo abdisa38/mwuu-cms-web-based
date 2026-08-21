@@ -4,7 +4,8 @@ import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { ArrowLeft, ArrowRight, Check, ChevronDown, GraduationCap, Building2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { publicService, CollegeDepartmentItem } from "../services/publicService";
+import { publicService } from "../services/publicService";
+import { MWU_OFFICIAL_COLLEGES, MWU_OFFICIAL_PROGRAMS, CollegeDepartment } from "../data/mwuAcademicStructure";
 import { toast } from "sonner";
 
 export function RegistrationPage() {
@@ -14,55 +15,50 @@ export function RegistrationPage() {
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const [collegesList, setCollegesList] = useState<CollegeDepartmentItem[]>([]);
-  const [programsList, setProgramsList] = useState<string[]>([]);
+  // Initialized synchronously with official MWU structure
+  const [collegesList, setCollegesList] = useState<CollegeDepartment[]>(MWU_OFFICIAL_COLLEGES);
+  const [programsList, setProgramsList] = useState<string[]>(MWU_OFFICIAL_PROGRAMS);
 
-  // Form State - Clean Real Defaults
+  // Form State - Defaults to First Real MWU Faculty & Department
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     studentId: "",
-    college: "",
-    department: "",
-    program: "Undergraduate Regular",
+    college: MWU_OFFICIAL_COLLEGES[0].college,
+    department: MWU_OFFICIAL_COLLEGES[0].departments[0],
+    program: MWU_OFFICIAL_PROGRAMS[0],
     password: "",
     confirmPassword: "",
   });
 
-  // Fetch real university colleges & departments
+  // Fetch and sync any real dynamic updates from backend if available
   useEffect(() => {
     publicService.getCollegesAndDepartments()
       .then((res) => {
         if (res.colleges && res.colleges.length > 0) {
           setCollegesList(res.colleges);
-          const firstCollege = res.colleges[0];
-          setFormData((prev) => ({
-            ...prev,
-            college: prev.college || firstCollege.college,
-            department: prev.department || firstCollege.departments[0] || "",
-          }));
         }
         if (res.programs && res.programs.length > 0) {
           setProgramsList(res.programs);
         }
       })
       .catch((err) => {
-        console.error("Failed to load academic structure:", err);
+        console.warn("Using offline official MWU academic catalog:", err);
       });
   }, []);
 
-  const currentCollege = collegesList.find((c) => c.college === formData.college);
+  const currentCollege = collegesList.find((c) => c.college === formData.college) || collegesList[0];
   const availableDepartments = currentCollege?.departments || [];
 
   const handleCollegeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCollegeName = e.target.value;
-    const foundCollege = collegesList.find((c) => c.college === selectedCollegeName);
+    const foundCollege = collegesList.find((c) => c.college === selectedCollegeName) || collegesList[0];
     setFormData({
       ...formData,
       college: selectedCollegeName,
-      department: foundCollege?.departments[0] || "",
+      department: foundCollege.departments[0] || "",
     });
   };
 
@@ -192,11 +188,11 @@ export function RegistrationPage() {
             {step === 2 && (
               <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
                 <h2 className="text-xl font-semibold text-slate-900 mb-2">Academic Information</h2>
-                <p className="text-xs text-slate-500 mb-4">Select your registered faculty and department from the university records.</p>
+                <p className="text-xs text-slate-500 mb-4">Select your official Madda Walabu University College and Department.</p>
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">Student ID Number <span className="text-red-500">*</span></label>
-                  <Input name="studentId" value={formData.studentId} onChange={handleChange} placeholder="e.g. Ugr/51234/15" required />
+                  <Input name="studentId" value={formData.studentId} onChange={handleChange} placeholder="e.g. UGR/34535/15" required />
                 </div>
 
                 {/* College / Faculty Dropdown with Dropdown Icon */}
@@ -208,10 +204,10 @@ export function RegistrationPage() {
                       value={formData.college}
                       onChange={handleCollegeChange}
                       required
-                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 shadow-sm cursor-pointer"
                     >
                       {collegesList.map((col) => (
-                        <option key={col.college} value={col.college}>
+                        <option key={col.college} value={col.college} className="text-slate-900 py-1">
                           {col.college}
                         </option>
                       ))}
@@ -229,10 +225,10 @@ export function RegistrationPage() {
                       value={formData.department}
                       onChange={handleChange}
                       required
-                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 shadow-sm cursor-pointer"
                     >
                       {availableDepartments.map((dept) => (
-                        <option key={dept} value={dept}>
+                        <option key={dept} value={dept} className="text-slate-900 py-1">
                           {dept}
                         </option>
                       ))}
@@ -250,18 +246,10 @@ export function RegistrationPage() {
                       value={formData.program}
                       onChange={handleChange}
                       required
-                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-slate-900 shadow-sm cursor-pointer"
+                      className="w-full h-11 pl-3 pr-10 border border-slate-300 rounded-xl bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 shadow-sm cursor-pointer"
                     >
-                      {(programsList.length > 0 ? programsList : [
-                        "Undergraduate Regular",
-                        "Undergraduate Extension (Evening)",
-                        "Undergraduate Weekend",
-                        "Undergraduate Summer (Kiremt)",
-                        "Postgraduate Regular (Master's)",
-                        "Postgraduate Weekend (Master's)",
-                        "Doctoral Program (PhD)"
-                      ]).map((prog) => (
-                        <option key={prog} value={prog}>
+                      {programsList.map((prog) => (
+                        <option key={prog} value={prog} className="text-slate-900 py-1">
                           {prog}
                         </option>
                       ))}
