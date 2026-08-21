@@ -271,24 +271,51 @@ export function PendingRequests() {
                 </div>
               </div>
 
-              {/* Uploaded Documents */}
+              {/* Uploaded Documents with In-Page Embedded Viewer */}
               {selectedRequest.documents && selectedRequest.documents.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Attached Documents</h4>
-                  <div className="space-y-2">
-                    {selectedRequest.documents.map((doc, idx) => (
-                      <div key={idx} className="bg-white border border-slate-200 p-3.5 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                          <p className="text-sm font-medium text-slate-900 truncate">{doc.name}</p>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                    <span>Attached Student Documents ({selectedRequest.documents.length})</span>
+                    <span className="text-[10px] text-blue-600 font-normal">Click to preview in-page</span>
+                  </h4>
+                  <div className="space-y-4">
+                    {selectedRequest.documents.map((doc, idx) => {
+                      const isImage = doc.url.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i) || !doc.url.endsWith(".pdf");
+                      return (
+                        <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                          <div className="p-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5 truncate">
+                              <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                              <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
+                            </div>
+                            <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-white rounded-md border border-slate-200">
+                              {doc.fileSize || "Uploaded"}
+                            </span>
+                          </div>
+
+                          {/* In-Page Document Preview Container */}
+                          <div className="p-3 bg-slate-100/50 flex justify-center items-center max-h-[360px] overflow-hidden rounded-b-2xl">
+                            {isImage ? (
+                              <img 
+                                src={doc.url} 
+                                alt={doc.name}
+                                className="max-h-[340px] w-auto max-w-full object-contain rounded-xl shadow-sm border border-slate-200 bg-white"
+                                onError={(e) => {
+                                  // Fallback placeholder
+                                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&auto=format&fit=crop";
+                                }}
+                              />
+                            ) : (
+                              <iframe 
+                                src={doc.url} 
+                                title={doc.name} 
+                                className="w-full h-[320px] rounded-xl border border-slate-200 bg-white"
+                              />
+                            )}
+                          </div>
                         </div>
-                        <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="outline" className="text-xs">
-                            <Eye className="w-3.5 h-3.5 mr-1" /> View
-                          </Button>
-                        </a>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
