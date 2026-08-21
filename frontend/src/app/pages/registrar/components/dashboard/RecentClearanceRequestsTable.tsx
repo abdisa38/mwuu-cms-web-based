@@ -1,109 +1,101 @@
-import { FileText, MoreVertical, Eye, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router";
+import { 
+  Search, 
+  Filter, 
+  ChevronRight, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  Building2,
+  FileCheck2,
+  RefreshCw
+} from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
+import { registrarService } from "../../../../../services/registrarService";
+import { ClearanceRequest } from "../../../../../services/clearanceService";
 
 export function RecentClearanceRequestsTable() {
-  const requests = [
-    { student: "Chala Merera", id: "UGR/8821/11", dept: "Civil Engineering", type: "Graduation", status: "Pending Registrar", currentDept: "Registrar", date: "Today, 09:45 AM", priority: "High" },
-    { student: "Tigist Bekele", id: "UGR/4432/12", dept: "Law", type: "Withdrawal", status: "In Progress", currentDept: "Library", date: "Today, 08:30 AM", priority: "Normal" },
-    { student: "Kidist Alemu", id: "UGR/9981/13", dept: "Medicine", type: "Transfer", status: "Pending Registrar", currentDept: "Registrar", date: "Yesterday, 04:15 PM", priority: "Urgent" },
-    { student: "Yonas Tesfaye", id: "UGR/1122/12", dept: "Computer Science", type: "Graduation", status: "Rejected", currentDept: "Student Cafe", date: "Yesterday, 02:00 PM", priority: "Normal" },
-    { student: "Betelhem Getachew", id: "UGR/5544/14", dept: "Accounting", type: "Withdrawal", status: "In Progress", currentDept: "Finance", date: "Oct 24, 11:20 AM", priority: "Normal" },
-  ];
+  const [requests, setRequests] = useState<ClearanceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    registrarService.getAllClearances()
+      .then(res => setRequests(res.clearances || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-          <FileText className="w-4 h-4 text-slate-500" />
-          Recent Clearance Requests
-        </h3>
-        <div className="flex gap-2">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search requests..." 
-              className="pl-3 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none shadow-sm w-48"
-            />
-          </div>
-          <Button variant="outline" size="sm" className="h-8">Filter</Button>
-          <Button variant="ghost" size="sm" className="text-blue-600 h-8">View All</Button>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+        <div>
+          <h3 className="font-bold text-slate-900 text-lg">Recent Clearance Applications</h3>
+          <p className="text-xs text-slate-500">Live student clearance records submitted to the central database</p>
         </div>
+        <Link to="/registrar/pending">
+          <Button variant="outline" size="sm" className="bg-white">
+            View All <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </Link>
       </div>
+
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
+        <table className="w-full text-sm text-left whitespace-nowrap">
           <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="px-6 py-3 font-semibold">Student</th>
-              <th className="px-6 py-3 font-semibold">Student ID</th>
-              <th className="px-6 py-3 font-semibold">Department</th>
-              <th className="px-6 py-3 font-semibold">Type</th>
-              <th className="px-6 py-3 font-semibold">Current Status</th>
-              <th className="px-6 py-3 font-semibold">Date Submitted</th>
-              <th className="px-6 py-3 font-semibold text-center">Priority</th>
-              <th className="px-6 py-3 font-semibold text-right">Actions</th>
+              <th className="px-6 py-4">Request ID</th>
+              <th className="px-6 py-4">Student</th>
+              <th className="px-6 py-4">Department & Program</th>
+              <th className="px-6 py-4">Clearance Type</th>
+              <th className="px-6 py-4">Current Status</th>
+              <th className="px-6 py-4">Submitted Date</th>
+              <th className="px-6 py-4 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {requests.map((req, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition-colors group">
-                <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                  {req.student}
-                </td>
-                <td className="px-6 py-4 text-slate-500 font-mono">
-                  {req.id}
-                </td>
-                <td className="px-6 py-4 text-slate-600">
-                  {req.dept}
-                </td>
-                <td className="px-6 py-4 text-slate-600">
-                  {req.type}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium w-fit ${
-                      req.status === 'Pending Registrar' ? 'bg-amber-100 text-amber-700' : 
-                      req.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
-                      'bg-blue-100 text-blue-700'
+            {requests.length > 0 ? (
+              requests.slice(0, 8).map((req) => (
+                <tr key={req._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-mono font-bold text-blue-900">{req.requestId}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-slate-900">{req.studentName}</p>
+                    <p className="text-xs text-slate-500">{req.studentId}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-slate-800">{req.department}</p>
+                    <p className="text-xs text-slate-500">{req.program}</p>
+                  </td>
+                  <td className="px-6 py-4 capitalize text-slate-700">{req.clearanceType}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+                      req.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      req.status === 'approved' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
-                      {req.status}
+                      {req.status === 'approved' ? 'READY FOR FINAL SIGNOFF' : req.status.toUpperCase()}
                     </span>
-                    <span className="text-xs text-slate-400 mt-1">at {req.currentDept}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-slate-500">
-                  {req.date}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border ${
-                    req.priority === 'Urgent' ? 'bg-rose-50 text-rose-700 border-rose-200' : 
-                    req.priority === 'High' ? 'bg-orange-50 text-orange-700 border-orange-200' : 
-                    'bg-slate-100 text-slate-600 border-slate-200'
-                  }`}>
-                    {req.priority}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    {req.status === 'Pending Registrar' && (
-                      <>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600">
-                          <CheckCircle className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600">
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-slate-500">
+                    {new Date(req.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link to={req.status === 'approved' ? "/registrar/approvals" : "/registrar/pending"}>
+                      <Button size="sm" variant="outline" className="text-xs bg-white">
+                        Manage
+                      </Button>
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  No clearance requests in database.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
