@@ -1,74 +1,50 @@
-import { Building2, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Button } from "@/app/components/ui/Button";
+import { useState, useEffect } from "react";
+import { Building2, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
+import { registrarService } from "../../../../../services/registrarService";
 
 export function DepartmentPerformanceTable() {
-  const departments = [
-    { name: "Library", pending: 45, approved: 1250, rejected: 12, avgTime: "4 hrs", score: 98, sla: "On Track", trend: "up" },
-    { name: "Student Cafe", pending: 120, approved: 1100, rejected: 5, avgTime: "12 hrs", score: 85, sla: "Warning", trend: "down" },
-    { name: "Dormitory", pending: 230, approved: 890, rejected: 45, avgTime: "24 hrs", score: 72, sla: "Breached", trend: "down" },
-    { name: "Sports", pending: 15, approved: 1300, rejected: 2, avgTime: "2 hrs", score: 99, sla: "On Track", trend: "up" },
-    { name: "Finance", pending: 85, approved: 1150, rejected: 8, avgTime: "6 hrs", score: 92, sla: "On Track", trend: "up" },
-  ];
+  const [depts, setDepts] = useState<any[]>([]);
+
+  useEffect(() => {
+    registrarService.getDashboard()
+      .then(res => setDepts(res.departmentPerformance || []))
+      .catch(() => {});
+  }, []);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-        <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-slate-500" />
-          Department Performance Ranking
-        </h3>
-        <Button variant="ghost" size="sm" className="text-blue-600 h-8">View Full Report</Button>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="font-bold text-slate-900 text-lg">Department Turnaround Performance</h3>
+          <p className="text-xs text-slate-500">Real-time clearance queue efficiency by department</p>
+        </div>
       </div>
-      <div className="overflow-x-auto flex-1">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-3 font-semibold">Department</th>
-              <th className="px-6 py-3 font-semibold text-center">Pending</th>
-              <th className="px-6 py-3 font-semibold text-center">Approved</th>
-              <th className="px-6 py-3 font-semibold text-center">Rejected</th>
-              <th className="px-6 py-3 font-semibold">Avg Time</th>
-              <th className="px-6 py-3 font-semibold text-center">Score</th>
-              <th className="px-6 py-3 font-semibold">SLA Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {departments.map((dept, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                  {dept.name}
-                </td>
-                <td className="px-6 py-4 text-center font-medium text-amber-600 bg-amber-50/30">
-                  {dept.pending}
-                </td>
-                <td className="px-6 py-4 text-center text-emerald-600 font-medium">
-                  {dept.approved}
-                </td>
-                <td className="px-6 py-4 text-center text-rose-600 font-medium">
-                  {dept.rejected}
-                </td>
-                <td className="px-6 py-4 text-slate-600 font-mono">
-                  {dept.avgTime}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="font-bold text-slate-900">{dept.score}</span>
-                    {dept.trend === 'up' ? <TrendingUp className="w-3 h-3 text-emerald-500" /> : dept.trend === 'down' ? <TrendingDown className="w-3 h-3 text-rose-500" /> : <Minus className="w-3 h-3 text-slate-400" />}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-                    dept.sla === 'On Track' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                    dept.sla === 'Warning' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                    'bg-rose-50 text-rose-700 border-rose-200'
-                  }`}>
-                    {dept.sla}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="space-y-4">
+        {depts.length > 0 ? (
+          depts.map((d, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white text-slate-700 flex items-center justify-center font-bold text-xs shadow-sm border border-slate-200">
+                  {d.code}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">{d.name}</h4>
+                  <p className="text-xs text-slate-500">{d.pending} Pending Review</p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="font-bold text-slate-900 text-sm">{d.approved} Cleared</p>
+                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Avg {d.avgHours}h
+                </span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center py-6 text-slate-400 text-sm">Loading department analytics...</p>
+        )}
       </div>
     </div>
   );
