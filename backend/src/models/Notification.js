@@ -5,7 +5,16 @@ const notificationSchema = new mongoose.Schema(
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      index: true,
+    },
+    recipientDepartment: {
+      type: String,
+      default: "",
+      index: true,
+    },
+    recipientRole: {
+      type: String,
+      default: "",
       index: true,
     },
     title: {
@@ -18,7 +27,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["info", "success", "warning", "error", "clearance_update", "message"],
+      enum: ["info", "success", "warning", "error", "clearance_update", "message", "appeal"],
       default: "info",
     },
     link: {

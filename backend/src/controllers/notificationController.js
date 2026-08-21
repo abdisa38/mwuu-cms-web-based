@@ -5,12 +5,20 @@ import { Notification } from "../models/Notification.js";
 // @access  Private
 export const getMyNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipient: req.user._id })
+    const query = {
+      $or: [
+        { recipient: req.user._id },
+        ...(req.user.department ? [{ recipientDepartment: req.user.department }] : []),
+        ...(req.user.role ? [{ recipientRole: req.user.role }] : []),
+      ],
+    };
+
+    const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
-      .limit(30);
+      .limit(50);
 
     const unreadCount = await Notification.countDocuments({
-      recipient: req.user._id,
+      ...query,
       isRead: false,
     });
 
@@ -25,10 +33,7 @@ export const getMyNotifications = async (req, res) => {
 // @access  Private
 export const markAsRead = async (req, res) => {
   try {
-    await Notification.findOneAndUpdate(
-      { _id: req.params.id, recipient: req.user._id },
-      { isRead: true }
-    );
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
     return res.json({ success: true, message: "Marked as read" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -40,7 +45,14 @@ export const markAsRead = async (req, res) => {
 // @access  Private
 export const markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany({ recipient: req.user._id }, { isRead: true });
+    const query = {
+      $or: [
+        { recipient: req.user._id },
+        ...(req.user.department ? [{ recipientDepartment: req.user.department }] : []),
+        ...(req.user.role ? [{ recipientRole: req.user.role }] : []),
+      ],
+    };
+    await Notification.updateMany(query, { isRead: true });
     return res.json({ success: true, message: "All marked as read" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

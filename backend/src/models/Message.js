@@ -10,11 +10,20 @@ const messageSchema = new mongoose.Schema(
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+    },
+    department: {
+      type: String,
+      default: "Registrar",
+      index: true,
+    },
+    channel: {
+      type: String,
+      default: "",
+      index: true,
     },
     senderName: { type: String, required: true },
     senderRole: { type: String, required: true },
-    recipientName: { type: String, required: true },
+    recipientName: { type: String, default: "University Office" },
     subject: { type: String, default: "Clearance Inquiry" },
     message: { type: String, required: true },
     clearanceRequestId: { type: String, default: "" },
