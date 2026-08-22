@@ -9,6 +9,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  verifyStudentAccount,
+  getVerificationStats,
   getStaffDepartments,
   createDepartment,
   updateDepartment,
@@ -32,7 +34,9 @@ router.put("/clearances/:id/final-approve", finalApproveClearance);
 router.put("/clearances/:id/reject", rejectClearance);
 router.get("/certificates", getCertificates);
 
-// User Management
+// User Management & Student Verification
+router.get("/verification-stats", getVerificationStats);
+router.put("/users/:id/verify", verifyStudentAccount);
 router.get("/users", getUsers);
 router.post("/users", createUser);
 router.put("/users/:id", updateUser);

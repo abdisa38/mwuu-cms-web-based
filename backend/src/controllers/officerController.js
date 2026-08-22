@@ -188,6 +188,18 @@ export const reviewClearance = async (req, res) => {
       clearance.departmentApprovals[deptApprIndex].itemsChecked = itemsChecked;
     }
 
+    // Check if all non-registrar departments are approved
+    const nonRegistrarApprovals = clearance.departmentApprovals.filter(
+      (a) => !a.departmentName.toLowerCase().includes("reg")
+    );
+    const allNonRegistrarApproved =
+      nonRegistrarApprovals.length > 0 &&
+      nonRegistrarApprovals.every((a) => a.status === "approved");
+
+    const registrarApproval = clearance.departmentApprovals.find((a) =>
+      a.departmentName.toLowerCase().includes("reg")
+    );
+
     // Check overall clearance status
     const allApproved = clearance.departmentApprovals.every(
       (a) => a.status === "approved"
@@ -199,7 +211,7 @@ export const reviewClearance = async (req, res) => {
     if (anyRejected) {
       clearance.status = "rejected";
     } else if (allApproved) {
-      clearance.status = "approved"; // Ready for final registrar verification
+      clearance.status = "approved";
     } else {
       clearance.status = "in_progress";
     }
@@ -214,7 +226,7 @@ export const reviewClearance = async (req, res) => {
 
     await clearance.save();
 
-    // Create student notification
+    // Create student notification for this department action
     await Notification.create({
       recipient: clearance.student,
       title: `${dept} Clearance ${newStatus.toUpperCase()}`,
@@ -225,6 +237,26 @@ export const reviewClearance = async (req, res) => {
       type: action === "approve" ? "success" : "warning",
       link: "/student/clearance",
     });
+
+    // AUTO-ANNOUNCE TO REGISTRAR IF ALL OTHER DEPARTMENTS HAVE APPROVED!
+    if (action === "approve" && allNonRegistrarApproved && (!registrarApproval || registrarApproval.status === "pending")) {
+      await Notification.create({
+        recipientDepartment: "Registrar",
+        recipientRole: "registrar",
+        title: `All Departments Approved: ${clearance.requestId}`,
+        message: `Clearance request ${clearance.requestId} for student ${clearance.studentName} (${clearance.studentId} - ${clearance.department}) has been approved by all 5 department checkpoints. Awaiting Final Registrar Sign-off & Certificate Issuance.`,
+        type: "info",
+        link: "/registrar/final-approvals",
+      });
+
+      await Notification.create({
+        recipient: clearance.student,
+        title: `All Department Checkpoints Cleared!`,
+        message: `All university department clearance checkpoints have approved your request. It is now awaiting final Registrar verification and digital certificate release.`,
+        type: "success",
+        link: "/student/clearance",
+      });
+    }
 
     // Record system audit log
     await AuditLog.create({

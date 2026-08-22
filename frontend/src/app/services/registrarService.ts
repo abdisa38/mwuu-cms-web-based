@@ -111,6 +111,15 @@ export const registrarService = {
     return api.post("/registrar/users", data);
   },
 
+  // Verification & Student Management
+  async getVerificationStats(): Promise<{ success: boolean; stats: any }> {
+    return api.get("/registrar/verification-stats");
+  },
+
+  async verifyStudent(id: string, remarks?: string): Promise<{ success: boolean; message: string; student: UserProfile }> {
+    return api.put(`/registrar/users/${id}/verify`, { remarks });
+  },
+
   async updateUser(id: string, data: any): Promise<{ success: boolean; user: UserProfile }> {
     return api.put(`/registrar/users/${id}`, data);
   },
