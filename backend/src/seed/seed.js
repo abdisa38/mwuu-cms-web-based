@@ -22,7 +22,7 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 export const seedDatabase = async () => {
   try {
-    console.log("🌱 Checking and seeding initial database data...");
+    console.log("[SEED] Checking and seeding initial database data...");
 
     // 1. Seed Registrar Admin
     let registrar = await User.findOne({ email: "registrar@mwu.edu.et" });
@@ -38,7 +38,7 @@ export const seedDatabase = async () => {
         phone: "+251 91 100 0001",
         status: "Active",
       });
-      console.log("👤 Created Registrar Admin account: registrar@mwu.edu.et");
+      console.log("[SEED] Created Registrar Admin account: registrar@mwu.edu.et");
     }
 
     // 2. Seed Department Officers & Department Heads
@@ -96,7 +96,7 @@ export const seedDatabase = async () => {
       let existingOfficer = await User.findOne({ email: off.email });
       if (!existingOfficer) {
         existingOfficer = await User.create(off);
-        console.log(`👤 Created Officer: ${off.name} (${off.department})`);
+        console.log(`[SEED] Created Officer: ${off.name} (${off.department})`);
       }
       officerMap[off.department] = existingOfficer._id;
     }
@@ -128,7 +128,7 @@ export const seedDatabase = async () => {
           address: "Robe Town, Kebele 02",
         },
       });
-      console.log("🎓 Created Student account: student@mwu.edu.et (UGR/1234/12)");
+      console.log("[SEED] Created Student account: student@mwu.edu.et (UGR/1234/12)");
     }
 
     // 4. Seed Standard Departments
@@ -138,70 +138,46 @@ export const seedDatabase = async () => {
         code: "DEPT",
         category: "academic",
         description: "Academic department clearance and project submission sign-off",
-        contactEmail: "cs_head@mwu.edu.et",
-        officeLocation: "College of Computing Building",
-        phone: "+251 22 665 1105",
-        headOfficer: officerMap["Department Head"],
-        averageProcessingHours: 24,
+        orderIndex: 1,
       },
       {
         name: "Library",
         code: "LIB",
-        category: "service",
-        description: "Library book returns and overdue fine clearance",
-        contactEmail: "library@mwu.edu.et",
-        officeLocation: "Main Library, 1st Floor",
-        phone: "+251 22 665 1101",
-        headOfficer: officerMap["Library"],
-        averageProcessingHours: 12,
+        category: "administrative",
+        description: "Library book return and dues clearance",
+        orderIndex: 2,
       },
       {
         name: "Dormitory",
         code: "DORM",
-        category: "facility",
+        category: "administrative",
         description: "Dormitory key return and room inspection",
-        contactEmail: "dormitory@mwu.edu.et",
-        officeLocation: "Block 14 Office",
-        phone: "+251 22 665 1102",
-        headOfficer: officerMap["Dormitory"],
-        averageProcessingHours: 24,
+        orderIndex: 3,
       },
       {
         name: "Cafeteria",
         code: "CAFE",
-        category: "service",
-        description: "Meal card handover and student dining clearance",
-        contactEmail: "cafeteria@mwu.edu.et",
-        officeLocation: "Student Cafeteria Building",
-        phone: "+251 22 665 1103",
-        headOfficer: officerMap["Cafeteria"],
-        averageProcessingHours: 6,
+        category: "services",
+        description: "Meal card surrender and cafeteria dues clearance",
+        orderIndex: 4,
       },
       {
         name: "Bookstore",
         code: "BOOK",
-        category: "service",
-        description: "Textbook return and rental inventory",
-        contactEmail: "bookstore@mwu.edu.et",
-        officeLocation: "Student Center, Room 102",
-        phone: "+251 22 665 1104",
-        headOfficer: officerMap["Bookstore"],
-        averageProcessingHours: 18,
+        category: "services",
+        description: "Textbook return and bookstore clearance",
+        orderIndex: 5,
       },
       {
         name: "Registrar",
         code: "REG",
         category: "administrative",
-        description: "Final transcript verification and clearance certificate issuance",
-        contactEmail: "registrar@mwu.edu.et",
-        officeLocation: "Administration Building, Room 101",
-        phone: "+251 22 665 1000",
-        headOfficer: registrar._id,
-        averageProcessingHours: 24,
+        description: "Final academic records verification and certificate release",
+        orderIndex: 6,
       },
     ];
 
-    // Clean up any test/malformed departments
+    // Clean up any test departments
     await Department.deleteMany({ name: { $regex: /5246436|Departmen head/i } });
 
     for (const d of standardDepartments) {
@@ -210,7 +186,7 @@ export const seedDatabase = async () => {
         await Department.create(d);
       }
     }
-    console.log("🏢 Seeded official university departments.");
+    console.log("[SEED] Seeded official university departments.");
 
     // 5. Seed Workflows
     const workflowsData = [
@@ -289,9 +265,9 @@ export const seedDatabase = async () => {
       }
     }
 
-    console.log("✅ Database verification and seeding complete!");
+    console.log("[SEED] Database verification and seeding complete!");
   } catch (error) {
-    console.error("❌ Seed Error:", error);
+    console.error("[SEED ERROR]", error);
   }
 };
 

@@ -19,7 +19,7 @@ try {
   const conn = await mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 10000,
   });
-  console.log("✅ CONNECTED SUCCESSFULLY TO:", conn.connection.host);
+  console.log("[SUCCESS] Connected successfully to:", conn.connection.host);
   await mongoose.disconnect();
   console.log("Disconnected.");
   process.exit(0);
