@@ -105,7 +105,13 @@ export const getAllClearances = async (req, res) => {
     const query = {};
 
     if (status && status !== "all") {
-      query.status = status;
+      if (status === "pending" || status === "in_progress") {
+        query.status = { $in: ["pending", "in_progress"] };
+      } else if (status === "approved" || status === "final_approval") {
+        query.status = "approved";
+      } else {
+        query.status = status;
+      }
     }
     if (type && type !== "all") {
       query.clearanceType = type;

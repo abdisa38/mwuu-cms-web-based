@@ -1,14 +1,35 @@
+import { useState, useEffect } from "react";
 import { Clock, Layers, AlertCircle, CalendarX, CheckSquare, AlertTriangle, Timer } from "lucide-react";
+import { registrarService } from "@/app/services/registrarService";
 
 export function PendingKPIs() {
+  const [stats, setStats] = useState({
+    totalClearances: 0,
+    pendingClearances: 0,
+    readyForFinalApproval: 0,
+    completedClearances: 0,
+    rejectedClearances: 0,
+    avgProcessingDays: 2.4,
+  });
+
+  useEffect(() => {
+    registrarService.getDashboard()
+      .then((res) => {
+        if (res.success && res.stats) {
+          setStats(res.stats as any);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const kpis = [
-    { label: "Total Active Clearances", value: "842", icon: Layers, color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
-    { label: "Pending Dept Review", value: "415", icon: Clock, color: "text-amber-600", bg: "bg-amber-100", border: "border-amber-200" },
-    { label: "Blocked Requests", value: "32", icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-100", border: "border-rose-200" },
-    { label: "Overdue Requests", value: "18", icon: CalendarX, color: "text-red-600", bg: "bg-red-100", border: "border-red-200" },
-    { label: "Awaiting Final Approval", value: "240", icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200" },
-    { label: "High Priority Requests", value: "45", icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-100", border: "border-purple-200" },
-    { label: "Avg Processing Time", value: "2.4d", icon: Timer, color: "text-indigo-600", bg: "bg-indigo-100", border: "border-indigo-200" },
+    { label: "Active Clearances", value: `${stats.pendingClearances}`, icon: Layers, color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
+    { label: "Pending Dept Review", value: `${stats.pendingClearances}`, icon: Clock, color: "text-amber-600", bg: "bg-amber-100", border: "border-amber-200" },
+    { label: "Awaiting Final Sign-off", value: `${stats.readyForFinalApproval}`, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200" },
+    { label: "Completed in DB", value: `${stats.completedClearances}`, icon: CheckSquare, color: "text-indigo-600", bg: "bg-indigo-100", border: "border-indigo-200" },
+    { label: "Rejected Requests", value: `${stats.rejectedClearances}`, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-100", border: "border-rose-200" },
+    { label: "High Priority", value: `${stats.readyForFinalApproval}`, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-100", border: "border-purple-200" },
+    { label: "Avg Processing Time", value: `${stats.avgProcessingDays || 2.4}d`, icon: Timer, color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200" },
   ];
 
   return (
