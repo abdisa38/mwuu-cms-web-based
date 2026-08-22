@@ -198,7 +198,7 @@ export const finalApproveClearance = async (req, res) => {
     // Create student notification
     await Notification.create({
       recipient: clearance.student,
-      title: "🎉 Clearance Completed & Certificate Issued!",
+      title: "Clearance Completed & Certificate Issued",
       message: `Congratulations! Your university clearance is complete. Certificate #${certNumber} has been issued.`,
       type: "success",
       link: "/student/certificate",

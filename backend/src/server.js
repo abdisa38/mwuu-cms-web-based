@@ -82,6 +82,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 MWU CMS Backend Server running on port ${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`[SERVER] MWU CMS Backend Server running on port ${PORT}`);
+  console.log(`[ENVIRONMENT] ${process.env.NODE_ENV || "development"}`);
 });

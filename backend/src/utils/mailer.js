@@ -30,9 +30,10 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       text: text || "",
       html: html || text,
     });
-    console.log(`📧 Email sent to ${to}: ${info.messageId}`);
-    return info;
+    console.log(`[MAIL] Email sent to ${to}: ${info.messageId}`);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`❌ Email Send Failed to ${to}:`, error.message);
+    console.error(`[MAIL ERROR] Email Send Failed to ${to}:`, error.message);
+    return { success: false, error: error.message };
   }
 };

@@ -162,7 +162,7 @@ export function MyClearance() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-emerald-950 flex items-center gap-2">
-                🎓 Clearance 100% Completed & Officially Certified!
+                Clearance 100% Completed & Officially Certified
               </h3>
               <p className="text-sm text-emerald-800 mt-1 leading-relaxed">
                 All 6 university department checkpoints including the Central Registrar have approved your clearance. Your official QR-verifiable certificate has been issued.
@@ -190,7 +190,7 @@ export function MyClearance() {
           </div>
           <div>
             <h3 className="text-base font-bold text-blue-950 flex items-center gap-2">
-              🎉 All Department Checkpoints Cleared!
+              All Department Checkpoints Cleared
             </h3>
             <p className="text-sm text-blue-800 mt-1 leading-relaxed">
               Your clearance application has been successfully approved across all university department checkpoints (Department Head, Library, Dormitory, Cafeteria, and Bookstore). The Central Registrar has been notified and is conducting final verification to release your official digital certificate.
