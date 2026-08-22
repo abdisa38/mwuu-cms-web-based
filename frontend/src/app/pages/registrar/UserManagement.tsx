@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { registrarService } from "../../services/registrarService";
 import { UserProfile } from "../../services/authService";
-import { MWU_ACADEMIC_COLLEGES } from "../../data/mwuAcademicStructure";
+import { MWU_OFFICIAL_COLLEGES } from "../../data/mwuAcademicStructure";
 import { toast } from "sonner";
 
 export const CLEARANCE_OFFICES = [
@@ -39,7 +39,7 @@ export function UserManagement() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
 
-  const [selectedCollege, setSelectedCollege] = useState(MWU_ACADEMIC_COLLEGES[0].name);
+  const [selectedCollege, setSelectedCollege] = useState(MWU_OFFICIAL_COLLEGES[0].college);
 
   const [newUser, setNewUser] = useState({
     name: "",
@@ -47,8 +47,8 @@ export function UserManagement() {
     password: "",
     role: "student",
     userRoleCategory: "student", // 'student' | 'dept_head' | 'officer' | 'registrar'
-    college: MWU_ACADEMIC_COLLEGES[0].name,
-    department: MWU_ACADEMIC_COLLEGES[0].departments[0].name,
+    college: MWU_OFFICIAL_COLLEGES[0].college,
+    department: MWU_OFFICIAL_COLLEGES[0].departments[0],
     studentId: "",
     phone: "",
   });
@@ -70,7 +70,7 @@ export function UserManagement() {
     fetchUsers();
   }, [activeTab, search]);
 
-  const currentCollegeObj = MWU_ACADEMIC_COLLEGES.find((c) => c.name === selectedCollege) || MWU_ACADEMIC_COLLEGES[0];
+  const currentCollegeObj = MWU_OFFICIAL_COLLEGES.find((c) => c.college === selectedCollege) || MWU_OFFICIAL_COLLEGES[0];
 
   const handleRoleCategoryChange = (category: string) => {
     if (category === "student") {
@@ -78,15 +78,15 @@ export function UserManagement() {
         ...newUser,
         role: "student",
         userRoleCategory: "student",
-        college: currentCollegeObj.name,
-        department: currentCollegeObj.departments[0].name,
+        college: currentCollegeObj.college,
+        department: currentCollegeObj.departments[0],
       });
     } else if (category === "dept_head") {
       setNewUser({
         ...newUser,
         role: "officer",
         userRoleCategory: "dept_head",
-        college: currentCollegeObj.name,
+        college: currentCollegeObj.college,
         department: "Department Head",
       });
     } else if (category === "officer") {
@@ -111,11 +111,11 @@ export function UserManagement() {
 
   const handleCollegeChange = (collegeName: string) => {
     setSelectedCollege(collegeName);
-    const col = MWU_ACADEMIC_COLLEGES.find((c) => c.name === collegeName) || MWU_ACADEMIC_COLLEGES[0];
+    const col = MWU_OFFICIAL_COLLEGES.find((c) => c.college === collegeName) || MWU_OFFICIAL_COLLEGES[0];
     setNewUser({
       ...newUser,
-      college: col.name,
-      department: newUser.userRoleCategory === "dept_head" ? "Department Head" : col.departments[0].name,
+      college: col.college,
+      department: newUser.userRoleCategory === "dept_head" ? "Department Head" : col.departments[0],
     });
   };
 
@@ -142,8 +142,8 @@ export function UserManagement() {
         password: "",
         role: "student",
         userRoleCategory: "student",
-        college: MWU_ACADEMIC_COLLEGES[0].name,
-        department: MWU_ACADEMIC_COLLEGES[0].departments[0].name,
+        college: MWU_OFFICIAL_COLLEGES[0].college,
+        department: MWU_OFFICIAL_COLLEGES[0].departments[0],
         studentId: "",
         phone: "",
       });
@@ -368,8 +368,8 @@ export function UserManagement() {
                       onChange={e => handleCollegeChange(e.target.value)}
                       className="w-full h-10 px-3 border border-slate-300 rounded-xl bg-white text-xs font-medium focus:ring-2 focus:ring-blue-500"
                     >
-                      {MWU_ACADEMIC_COLLEGES.map(c => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                      {MWU_OFFICIAL_COLLEGES.map(c => (
+                        <option key={c.college} value={c.college}>{c.college}</option>
                       ))}
                     </select>
                   </div>
@@ -382,7 +382,7 @@ export function UserManagement() {
                       className="w-full h-10 px-3 border border-slate-300 rounded-xl bg-white text-xs font-medium focus:ring-2 focus:ring-blue-500"
                     >
                       {currentCollegeObj.departments.map(d => (
-                        <option key={d.name} value={d.name}>{d.name}</option>
+                        <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
                   </div>
@@ -399,8 +399,8 @@ export function UserManagement() {
                       onChange={e => handleCollegeChange(e.target.value)}
                       className="w-full h-10 px-3 border border-slate-300 rounded-xl bg-white text-xs font-medium focus:ring-2 focus:ring-blue-500"
                     >
-                      {MWU_ACADEMIC_COLLEGES.map(c => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
+                      {MWU_OFFICIAL_COLLEGES.map(c => (
+                        <option key={c.college} value={c.college}>{c.college}</option>
                       ))}
                     </select>
                   </div>
