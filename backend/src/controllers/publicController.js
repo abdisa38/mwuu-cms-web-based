@@ -169,6 +169,20 @@ export const getCollegesAndDepartments = async (req, res) => {
   }
 };
 
+// @desc    Get FAQ items
+// @route   GET /api/public/faqs
+// @access  Public
+export const getFaqs = async (req, res) => {
+  try {
+    return res.json({
+      success: true,
+      faqs: MWU_FAQS,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get public stats for landing page
 // @route   GET /api/public/stats
 // @access  Public
