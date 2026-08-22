@@ -63,23 +63,22 @@ export function LoginPage() {
         <div className="relative z-10 my-auto py-6 max-w-lg">
           {/* Card Container */}
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 xl:p-6 shadow-2xl space-y-5 transform hover:scale-[1.01] transition-transform duration-300">
-            {/* Campus Banner Image from public folder */}
-            <div className="relative rounded-2xl overflow-hidden shadow-md border border-white/20 aspect-video bg-slate-900 group">
+            {/* Campus Banner Image from public folder - Taller & Vertical */}
+            <div className="relative rounded-2xl overflow-hidden shadow-lg border border-white/25 h-72 sm:h-80 xl:h-[340px] w-full bg-slate-900 group">
               <img 
                 src="/mwu banner.jfif" 
                 alt="Madda Walabu University Campus" 
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
-                  // Fallback to high-res university image if local format has issue
                   (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000&auto=format&fit=crop";
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent flex items-end p-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end p-5">
                 <div className="flex items-center gap-3">
-                  <ImageWithFallback src={mwuLogo} alt="MWU Logo" className="w-10 h-10 rounded-lg object-contain bg-white p-1 shadow-md" />
+                  <ImageWithFallback src={mwuLogo} alt="MWU Logo" className="w-12 h-12 rounded-xl object-contain bg-white p-1 shadow-md border border-white/30" />
                   <div>
-                    <h3 className="text-white font-bold text-base leading-tight drop-shadow-sm">Madda Walabu University</h3>
-                    <span className="text-blue-200 text-xs font-medium">Official Digital Clearance Portal</span>
+                    <h3 className="text-white font-bold text-lg leading-tight drop-shadow-md">Madda Walabu University</h3>
+                    <span className="text-blue-200 text-xs font-medium tracking-wide">Official Digital Clearance Portal</span>
                   </div>
                 </div>
               </div>
