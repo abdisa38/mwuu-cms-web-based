@@ -63,6 +63,17 @@ const userSchema = new mongoose.Schema(
       enum: ["Active", "Inactive", "Suspended"],
       default: "Active",
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verifiedAt: {
+      type: Date,
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     academicInfo: {
       admissionYear: { type: String, default: "2013" },
       expectedGraduation: { type: String, default: "2017" },

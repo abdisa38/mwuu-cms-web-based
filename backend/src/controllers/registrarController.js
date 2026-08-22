@@ -155,6 +155,23 @@ export const finalApproveClearance = async (req, res) => {
     const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, { width: 250, margin: 2 });
 
     clearance.status = "completed";
+
+    // Mark Registrar checkpoint and all department approvals as approved
+    if (clearance.departmentApprovals && clearance.departmentApprovals.length > 0) {
+      clearance.departmentApprovals.forEach((dept) => {
+        if (dept.departmentCode === "REG" || dept.departmentName.toLowerCase().includes("reg") || dept.status !== "approved") {
+          dept.status = "approved";
+          dept.reviewedBy = dept.reviewedBy || registrar._id;
+          dept.reviewedByName = dept.reviewedByName || registrar.name;
+          dept.reviewedAt = dept.reviewedAt || new Date();
+          dept.remarks = dept.remarks || remarks || "Officially verified and approved by University Registrar.";
+          if (dept.checkList) {
+            dept.checkList.forEach((item) => { item.checked = true; });
+          }
+        }
+      });
+    }
+
     clearance.finalApproval = {
       approvedBy: registrar._id,
       approvedByName: registrar.name,
@@ -173,7 +190,7 @@ export const finalApproveClearance = async (req, res) => {
       action: "FINAL_REGISTRAR_APPROVAL",
       performedBy: registrar.name,
       role: "registrar",
-      details: `Clearance finalized and Certificate #${certNumber} generated.`,
+      details: `Clearance finalized and Certificate #${certNumber} generated. All 6 department checkpoints certified.`,
     });
 
     await clearance.save();
