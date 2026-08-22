@@ -43,22 +43,7 @@ export function LoginPage() {
     handleLogin(identifier, password);
   };
 
-  // Quick Demo Logins
-  const setDemoCredentials = (role: "student" | "officer" | "registrar") => {
-    if (role === "student") {
-      setIdentifier("student@mwu.edu.et");
-      setPassword("Student@12345");
-      handleLogin("student@mwu.edu.et", "Student@12345");
-    } else if (role === "officer") {
-      setIdentifier("library@mwu.edu.et");
-      setPassword("Officer@12345");
-      handleLogin("library@mwu.edu.et", "Officer@12345");
-    } else if (role === "registrar") {
-      setIdentifier("registrar@mwu.edu.et");
-      setPassword("Admin@12345");
-      handleLogin("registrar@mwu.edu.et", "Admin@12345");
-    }
-  };
+
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] w-full bg-white">
@@ -100,35 +85,7 @@ export function LoginPage() {
             <p className="text-slate-600">Please enter your credentials to sign in.</p>
           </div>
 
-          {/* Quick Demo Login Badges */}
-          <div className="mb-6 bg-blue-50/70 border border-blue-100 rounded-xl p-3">
-            <div className="text-xs font-semibold text-blue-800 mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Quick Live Demo Login:
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setDemoCredentials("student")}
-                className="text-xs bg-white text-blue-700 hover:bg-blue-100/60 font-medium py-1 px-2.5 rounded-lg border border-blue-200 shadow-sm transition-all"
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => setDemoCredentials("officer")}
-                className="text-xs bg-white text-indigo-700 hover:bg-indigo-100/60 font-medium py-1 px-2.5 rounded-lg border border-indigo-200 shadow-sm transition-all"
-              >
-                Officer (Library)
-              </button>
-              <button
-                type="button"
-                onClick={() => setDemoCredentials("registrar")}
-                className="text-xs bg-white text-purple-700 hover:bg-purple-100/60 font-medium py-1 px-2.5 rounded-lg border border-purple-200 shadow-sm transition-all"
-              >
-                Registrar
-              </button>
-            </div>
-          </div>
+
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">

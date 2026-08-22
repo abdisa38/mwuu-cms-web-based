@@ -1,8 +1,26 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Button } from "@/app/components/ui/Button";
 import { ArrowRight, CheckCircle2, Shield, Zap, FileText, HelpCircle, ChevronRight } from "lucide-react";
+import api from "@/app/services/api";
 
 export function LandingPage() {
+  const [stats, setStats] = useState({
+    studentsCleared: "1+",
+    departmentsCount: "6",
+    averageApprovalTime: "24hr",
+  });
+
+  useEffect(() => {
+    api.get("/public/stats")
+      .then((res: any) => {
+        if (res.success && res.stats) {
+          setStats(res.stats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="flex flex-col w-full">
       {/* Hero Section */}
@@ -39,16 +57,16 @@ export function LandingPage() {
           
           <div className="mt-20 flex flex-wrap justify-center gap-x-12 gap-y-8 text-slate-500">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">10k+</span>
+              <span className="text-3xl font-bold text-slate-900">{stats.studentsCleared}</span>
               <span className="text-sm font-medium">Students Cleared</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">25+</span>
-              <span className="text-sm font-medium">Departments</span>
+              <span className="text-3xl font-bold text-slate-900">{stats.departmentsCount}</span>
+              <span className="text-sm font-medium">Clearance Desks</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">24hr</span>
-              <span className="text-sm font-medium">Average Approval</span>
+              <span className="text-3xl font-bold text-slate-900">{stats.averageApprovalTime}</span>
+              <span className="text-sm font-medium">Average Processing</span>
             </div>
           </div>
         </div>
