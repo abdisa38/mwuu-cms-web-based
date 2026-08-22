@@ -67,12 +67,12 @@ export function StaffOverviewTab({ staff }: { staff: StaffRecord }) {
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Assigned</div>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-            <div className="w-5 h-5 mx-auto mb-2 text-emerald-600 font-bold">✓</div>
+            <CheckCircle2 className="w-5 h-5 mx-auto mb-2 text-emerald-600" />
             <div className="text-2xl font-bold text-emerald-600 mb-1">340</div>
             <div className="text-xs font-medium text-emerald-700 uppercase tracking-wider">Approved</div>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-            <div className="w-5 h-5 mx-auto mb-2 text-red-600 font-bold">✗</div>
+            <XCircle className="w-5 h-5 mx-auto mb-2 text-red-600" />
             <div className="text-2xl font-bold text-red-600 mb-1">12</div>
             <div className="text-xs font-medium text-red-700 uppercase tracking-wider">Rejected</div>
           </div>

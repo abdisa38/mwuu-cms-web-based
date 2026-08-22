@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { StaffKPIs } from "./components/StaffKPIs";
-import { Users, Building2, Shield, Key, Plus, RefreshCw, Trash2, Mail, Phone } from "lucide-react";
+import { Users, Building2, Shield, Key, Plus, RefreshCw, Trash2, Mail, Phone, X } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { registrarService } from "@/app/services/registrarService";
@@ -181,7 +181,9 @@ export function StaffDepartmentsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95">
             <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
               <h3 className="text-lg font-bold text-slate-900">Add University Department</h3>
-              <button onClick={() => setIsAddDeptOpen(false)} className="text-slate-400 hover:text-slate-700">✕</button>
+              <button onClick={() => setIsAddDeptOpen(false)} className="text-slate-400 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <form onSubmit={handleCreateDept} className="p-6 space-y-4">
               <div className="space-y-1">

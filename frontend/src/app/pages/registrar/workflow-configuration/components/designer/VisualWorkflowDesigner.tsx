@@ -1,6 +1,6 @@
 import { ClearanceType } from "../../data/types";
 import { mockWorkflowNodesGraduation, mockWorkflowEdgesGraduation } from "../../data/mockData";
-import { Plus, Maximize, ZoomIn, ZoomOut, Save, Search, PlayCircle } from "lucide-react";
+import { Plus, Maximize, ZoomIn, ZoomOut, Save, Search, PlayCircle, Settings } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 
 interface VisualWorkflowDesignerProps {
@@ -26,7 +26,7 @@ export function VisualWorkflowDesigner({ clearanceType }: VisualWorkflowDesigner
 
   const getNodeIcon = (type: string) => {
     if (type === "Start" || type === "End") return null;
-    return <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0 mb-2 border border-slate-200"><span className="text-[10px]">⚙️</span></div>;
+    return <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0 mb-2 border border-slate-200"><Settings className="w-3 h-3 text-slate-600" /></div>;
   };
 
   return (
