@@ -139,6 +139,24 @@ export function MyClearance() {
         </div>
       </div>
 
+      {/* Auto-Announcement: All Department Checkpoints Approved */}
+      {approvals.filter(a => !a.departmentName.toLowerCase().includes("reg")).every(a => a.status === "approved") &&
+       approvals.some(a => a.departmentName.toLowerCase().includes("reg") && a.status === "pending") && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 shadow-sm flex items-start gap-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-blue-950 flex items-center gap-2">
+              🎉 All Department Checkpoints Cleared!
+            </h3>
+            <p className="text-sm text-blue-800 mt-1 leading-relaxed">
+              Your clearance application has been successfully approved across all university department checkpoints (Department Head, Library, Dormitory, Cafeteria, and Bookstore). The Central Registrar has been notified and is conducting final verification to release your official digital certificate.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Department Approvals Breakdown */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">

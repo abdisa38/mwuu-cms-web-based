@@ -13,11 +13,18 @@ import { UserProfile } from "@/app/services/authService";
 interface VerificationWorkspaceProps {
   student: UserProfile;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function VerificationWorkspace({ student, onClose }: VerificationWorkspaceProps) {
+export function VerificationWorkspace({ student, onClose, onSuccess }: VerificationWorkspaceProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeModal, setActiveModal] = useState<'Approve' | 'Reject' | 'RequestInfo' | 'Suspend' | null>(null);
+
+  const handleSuccessAction = () => {
+    setActiveModal(null);
+    if (onSuccess) onSuccess();
+    onClose();
+  };
 
   return (
     <div className={`fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex justify-center items-center ${isFullscreen ? 'p-0' : 'p-2 sm:p-4 md:p-6'}`}>
@@ -74,10 +81,32 @@ export function VerificationWorkspace({ student, onClose }: VerificationWorkspac
       </div>
 
       {/* Modals */}
-      {activeModal === 'Approve' && <ApproveModal onClose={() => { setActiveModal(null); onClose(); }} />}
-      {activeModal === 'Reject' && <RejectModal onClose={() => { setActiveModal(null); onClose(); }} />}
-      {activeModal === 'RequestInfo' && <RequestInfoModal onClose={() => setActiveModal(null)} />}
-      {activeModal === 'Suspend' && <SuspendModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'Approve' && (
+        <ApproveModal 
+          student={student} 
+          onClose={() => setActiveModal(null)} 
+          onSuccess={handleSuccessAction} 
+        />
+      )}
+      {activeModal === 'Reject' && (
+        <RejectModal 
+          student={student} 
+          onClose={() => setActiveModal(null)} 
+          onSuccess={handleSuccessAction} 
+        />
+      )}
+      {activeModal === 'RequestInfo' && (
+        <RequestInfoModal 
+          onClose={() => setActiveModal(null)} 
+        />
+      )}
+      {activeModal === 'Suspend' && (
+        <SuspendModal 
+          student={student} 
+          onClose={() => setActiveModal(null)} 
+          onSuccess={handleSuccessAction} 
+        />
+      )}
     </div>
   );
 }

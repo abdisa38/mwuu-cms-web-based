@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, Download, ChevronRight, Settings, HelpCircle, UserCheck } from "lucide-react";
-import { Button } from "@/app/components/ui/Button";
+import { ChevronRight, UserCheck } from "lucide-react";
 import { VerificationKPIs } from "./components/VerificationKPIs";
 import { VerificationQueueTable } from "./components/VerificationQueueTable";
 import { VerificationWorkspace } from "./components/workspace/VerificationWorkspace";
@@ -8,6 +7,11 @@ import { UserProfile } from "@/app/services/authService";
 
 export function StudentVerificationPage() {
   const [selectedStudent, setSelectedStudent] = useState<UserProfile | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-6 pb-20 md:pb-8 relative animate-in fade-in duration-300">
@@ -29,11 +33,14 @@ export function StudentVerificationPage() {
       </div>
 
       {/* KPIs */}
-      <VerificationKPIs />
+      <VerificationKPIs key={`kpi-${refreshKey}`} />
 
       {/* Main Content Area: Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-        <VerificationQueueTable onSelectStudent={(st) => setSelectedStudent(st)} />
+        <VerificationQueueTable 
+          key={`table-${refreshKey}`} 
+          onSelectStudent={(st) => setSelectedStudent(st)} 
+        />
       </div>
 
       {/* Full Screen Workspace Overlay */}
@@ -41,6 +48,7 @@ export function StudentVerificationPage() {
         <VerificationWorkspace 
           student={selectedStudent} 
           onClose={() => setSelectedStudent(null)} 
+          onSuccess={handleRefresh}
         />
       )}
     </div>

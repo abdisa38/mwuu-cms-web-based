@@ -1,14 +1,36 @@
+import { useState, useEffect } from "react";
 import { Clock, ShieldCheck, XCircle, AlertCircle, AlertTriangle, TrendingUp, Search } from "lucide-react";
+import { registrarService } from "@/app/services/registrarService";
 
 export function VerificationKPIs() {
+  const [stats, setStats] = useState({
+    pendingVerification: 0,
+    verifiedToday: 0,
+    rejectedToday: 0,
+    needsMoreInfo: 0,
+    suspiciousAccounts: 0,
+    avgVerificationTime: "2.4m",
+    successRate: "100%",
+  });
+
+  useEffect(() => {
+    registrarService.getVerificationStats()
+      .then((res: any) => {
+        if (res.success && res.stats) {
+          setStats(res.stats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const kpis = [
-    { label: "Pending Verification", value: "142", icon: Clock, color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
-    { label: "Verified Today", value: "85", icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200" },
-    { label: "Rejected Today", value: "12", icon: XCircle, color: "text-rose-600", bg: "bg-rose-100", border: "border-rose-200" },
-    { label: "Needs More Info", value: "24", icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-100", border: "border-amber-200" },
-    { label: "Suspicious Accounts", value: "3", icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-100", border: "border-purple-200" },
-    { label: "Average Time", value: "4.5m", icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-100", border: "border-indigo-200" },
-    { label: "Success Rate", value: "92%", icon: Search, color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200" },
+    { label: "Pending Verification", value: `${stats.pendingVerification}`, icon: Clock, color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
+    { label: "Verified In DB", value: `${stats.verifiedToday}`, icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-100", border: "border-emerald-200" },
+    { label: "Rejected / Suspended", value: `${stats.rejectedToday}`, icon: XCircle, color: "text-rose-600", bg: "bg-rose-100", border: "border-rose-200" },
+    { label: "Needs More Info", value: `${stats.needsMoreInfo}`, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-100", border: "border-amber-200" },
+    { label: "Suspicious Accounts", value: `${stats.suspiciousAccounts}`, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-100", border: "border-purple-200" },
+    { label: "Average Time", value: stats.avgVerificationTime, icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-100", border: "border-indigo-200" },
+    { label: "Success Rate", value: stats.successRate, icon: Search, color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200" },
   ];
 
   return (

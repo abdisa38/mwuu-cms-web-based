@@ -1,11 +1,36 @@
-import { X, XCircle, AlertTriangle, Upload } from "lucide-react";
+import { useState } from "react";
+import { X, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
+import { UserProfile } from "@/app/services/authService";
+import { registrarService } from "@/app/services/registrarService";
+import { toast } from "sonner";
 
 interface RejectModalProps {
+  student: UserProfile;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export function RejectModal({ onClose }: RejectModalProps) {
+export function RejectModal({ student, onClose, onSuccess }: RejectModalProps) {
+  const [reason, setReason] = useState("Information Mismatch");
+  const [comments, setComments] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleReject = async () => {
+    setLoading(true);
+    try {
+      await registrarService.updateUser(student._id || student.id!, {
+        status: "Suspended",
+      });
+      toast.success(`Verification rejected for ${student.name}.`);
+      onSuccess();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reject verification.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -23,44 +48,44 @@ export function RejectModal({ onClose }: RejectModalProps) {
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
             <p className="text-sm text-amber-800">
-              Rejecting this verification will keep the student's account inactive. An email will be sent to the student with the rejection reason.
+              Rejecting verification for <strong>{student.name} ({student.studentId || student.email})</strong> will set their profile status to Suspended in the database.
             </p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 block">Rejection Reason <span className="text-rose-500">*</span></label>
-            <select className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all">
-              <option value="">Select a reason...</option>
-              <option value="invalid_id">Invalid Student ID Document</option>
-              <option value="mismatch">Information Mismatch</option>
-              <option value="duplicate">Duplicate Account Detected</option>
-              <option value="not_enrolled">Student Not Currently Enrolled</option>
-              <option value="suspicious">Suspicious Activity</option>
-              <option value="other">Other</option>
+            <select 
+              value={reason} 
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+            >
+              <option value="Information Mismatch">Information Mismatch</option>
+              <option value="Invalid Student ID Document">Invalid Student ID Document</option>
+              <option value="Duplicate Account Detected">Duplicate Account Detected</option>
+              <option value="Student Not Currently Enrolled">Student Not Currently Enrolled</option>
+              <option value="Suspicious Activity">Suspicious Activity</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 block">Detailed Comments <span className="text-rose-500">*</span></label>
+            <label className="text-sm font-medium text-slate-700 block">Detailed Comments</label>
             <textarea 
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
               className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all min-h-[100px]"
-              placeholder="Provide detailed explanation for the student..."
+              placeholder="Provide reason for student records..."
             ></textarea>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 block">Upload Evidence (Optional)</label>
-            <div className="w-full border-2 border-dashed border-slate-200 rounded-lg p-4 flex flex-col items-center justify-center text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer">
-              <Upload className="w-5 h-5 mb-2" />
-              <span className="text-sm font-medium">Click to upload or drag and drop</span>
-              <span className="text-xs">PNG, JPG, PDF up to 5MB</span>
-            </div>
           </div>
         </div>
 
         <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
           <Button variant="ghost" onClick={onClose} className="text-slate-600">Cancel</Button>
-          <Button onClick={onClose} className="bg-rose-600 hover:bg-rose-700 text-white shadow-sm">
+          <Button 
+            onClick={handleReject} 
+            isLoading={loading} 
+            className="bg-rose-600 hover:bg-rose-700 text-white shadow-sm font-semibold px-5"
+          >
             Reject Verification
           </Button>
         </div>
