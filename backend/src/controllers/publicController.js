@@ -169,14 +169,25 @@ export const getCollegesAndDepartments = async (req, res) => {
   }
 };
 
-// @desc    Get FAQ items
-// @route   GET /api/public/faqs
+// @desc    Get public stats for landing page
+// @route   GET /api/public/stats
 // @access  Public
-export const getFaqs = async (req, res) => {
+export const getPublicStats = async (req, res) => {
   try {
+    const [completedCount, deptCount, totalStudents] = await Promise.all([
+      Clearance.countDocuments({ status: "completed" }),
+      Department.countDocuments({ isActive: true }),
+      Clearance.countDocuments(),
+    ]);
+
     return res.json({
       success: true,
-      faqs: MWU_FAQS,
+      stats: {
+        studentsCleared: completedCount > 0 ? `${completedCount}` : "1+",
+        departmentsCount: deptCount > 0 ? `${deptCount}` : "6",
+        totalApplications: totalStudents,
+        averageApprovalTime: "24hr",
+      },
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
