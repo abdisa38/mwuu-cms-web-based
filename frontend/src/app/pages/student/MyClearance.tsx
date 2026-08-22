@@ -6,17 +6,12 @@ import {
   Clock, 
   XCircle, 
   ChevronRight, 
-  AlertCircle, 
   Download, 
-  HelpCircle,
   FileText,
-  Building,
-  User,
-  Calendar,
-  Phone,
-  Mail,
-  RefreshCw,
-  PlusCircle
+  RefreshCw, 
+  PlusCircle,
+  Award,
+  ShieldCheck
 } from "lucide-react";
 import { clearanceService, ClearanceRequest } from "../../services/clearanceService";
 import { toast } from "sonner";
@@ -54,10 +49,25 @@ export function MyClearance() {
     }
   };
 
-  const approvals = clearance?.departmentApprovals || [];
-  const approvedCount = approvals.filter(a => a.status === "approved").length;
+  const isCompleted = clearance?.status === "completed";
+  const rawApprovals = clearance?.departmentApprovals || [];
+  
+  // If completed, ensure all checkpoints (including Registrar) reflect approved status
+  const approvals = rawApprovals.map(dept => {
+    if (isCompleted) {
+      return {
+        ...dept,
+        status: "approved" as const,
+        reviewedByName: dept.reviewedByName || "Registrar Administration",
+        reviewedAt: dept.reviewedAt || clearance?.finalApproval?.approvedAt || new Date().toISOString()
+      };
+    }
+    return dept;
+  });
+
+  const approvedCount = isCompleted ? approvals.length : approvals.filter(a => a.status === "approved").length;
   const totalCount = approvals.length;
-  const progressPercent = totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0;
+  const progressPercent = isCompleted ? 100 : (totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0);
 
   if (loading) {
     return (
@@ -96,8 +106,8 @@ export function MyClearance() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             {clearance.requestId}
-            <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
-              clearance.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+            <span className={`text-xs px-3 py-1 rounded-full font-bold border ${
+              isCompleted ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
               clearance.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
               'bg-blue-50 text-blue-700 border-blue-200'
             }`}>
@@ -117,7 +127,7 @@ export function MyClearance() {
           )}
           {clearance.certificate?.certNumber && (
             <Link to="/student/certificate">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md">
                 <Download className="w-4 h-4 mr-2" /> View Certificate
               </Button>
             </Link>
@@ -129,19 +139,51 @@ export function MyClearance() {
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-3">
         <div className="flex justify-between items-center text-sm font-semibold">
           <span className="text-slate-700">Clearance Status Progress</span>
-          <span className="text-blue-600">{approvedCount} of {totalCount} Departments Approved ({progressPercent}%)</span>
+          <span className={isCompleted ? "text-emerald-700 font-bold" : "text-blue-600 font-bold"}>
+            {approvedCount} of {totalCount} Departments Approved ({progressPercent}%)
+          </span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-3">
           <div 
-            className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+            className={`h-3 rounded-full transition-all duration-500 ease-out ${
+              isCompleted ? "bg-emerald-600" : "bg-blue-600"
+            }`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
-      {/* Auto-Announcement: All Department Checkpoints Approved */}
-      {approvals.filter(a => !a.departmentName.toLowerCase().includes("reg")).every(a => a.status === "approved") &&
-       approvals.some(a => a.departmentName.toLowerCase().includes("reg") && a.status === "pending") && (
+      {/* Celebration Banner: When Clearance is Completed */}
+      {isCompleted && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-lg">
+              <Award className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-emerald-950 flex items-center gap-2">
+                🎓 Clearance 100% Completed & Officially Certified!
+              </h3>
+              <p className="text-sm text-emerald-800 mt-1 leading-relaxed">
+                All 6 university department checkpoints including the Central Registrar have approved your clearance. Your official QR-verifiable certificate has been issued.
+              </p>
+              <p className="text-xs font-mono font-bold text-emerald-900 mt-2 bg-white/70 px-3 py-1 rounded-lg border border-emerald-200 inline-block">
+                Certificate No: {clearance.certificate?.certNumber}
+              </p>
+            </div>
+          </div>
+          <Link to="/student/certificate" className="shrink-0 w-full sm:w-auto">
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md">
+              <ShieldCheck className="w-4 h-4 mr-2" /> Download Certificate
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Auto-Announcement: All Department Checkpoints Approved (Waiting for Registrar) */}
+      {!isCompleted &&
+        approvals.filter(a => !a.departmentName.toLowerCase().includes("reg")).every(a => a.status === "approved") &&
+        approvals.some(a => a.departmentName.toLowerCase().includes("reg") && a.status === "pending") && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 shadow-sm flex items-start gap-4 animate-in slide-in-from-top-2 duration-300">
           <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md">
             <CheckCircle2 className="w-6 h-6" />
@@ -202,17 +244,6 @@ export function MyClearance() {
                         <p className="text-sm text-red-700 mt-2 bg-red-50 p-2.5 rounded-lg border border-red-200">
                           <strong>Rejection Reason:</strong> {dept.rejectionReason}
                         </p>
-                      )}
-
-                      {dept.itemsChecked && dept.itemsChecked.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {dept.itemsChecked.map((item, i) => (
-                            <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                              {item.name}
-                            </span>
-                          ))}
-                        </div>
                       )}
                     </div>
                   </div>

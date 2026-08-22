@@ -45,14 +45,16 @@ export function StudentDashboard() {
     fetchData();
   }, []);
 
-  const approvals = clearance?.departmentApprovals || [];
-  const totalSteps = approvals.length;
-  const approvedCount = approvals.filter(a => a.status === "approved").length;
-  const pendingCount = approvals.filter(a => a.status === "pending" || a.status === "hold").length;
-  const rejectedCount = approvals.filter(a => a.status === "rejected").length;
-  const completionPercentage = totalSteps > 0 ? Math.round((approvedCount / totalSteps) * 100) : 0;
+  const isCompleted = clearance?.status === "completed";
+  const rawApprovals = clearance?.departmentApprovals || [];
+  const approvals = rawApprovals.map(dept => isCompleted ? { ...dept, status: "approved" as const } : dept);
+  const totalSteps = approvals.length || 6;
+  const approvedCount = isCompleted ? totalSteps : approvals.filter(a => a.status === "approved").length;
+  const pendingCount = isCompleted ? 0 : approvals.filter(a => a.status === "pending" || a.status === "hold").length;
+  const rejectedCount = isCompleted ? 0 : approvals.filter(a => a.status === "rejected").length;
+  const completionPercentage = isCompleted ? 100 : (totalSteps > 0 ? Math.round((approvedCount / totalSteps) * 100) : 0);
 
-  const rejectedDept = approvals.find(a => a.status === "rejected");
+  const rejectedDept = isCompleted ? null : approvals.find(a => a.status === "rejected");
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 md:pb-0">
