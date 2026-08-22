@@ -1,10 +1,7 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import { Outlet, Link, useLocation } from "react-router";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import mwuLogo from "@/imports/download.jfif";
 import { 
-  Bell, 
-  Search, 
-  HelpCircle, 
   LayoutDashboard, 
   Users, 
   GitMerge, 
@@ -19,6 +16,7 @@ import {
   Settings, 
   LogOut,
   Menu,
+  X,
   GraduationCap
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -27,9 +25,9 @@ import { registrarService } from "../../services/registrarService";
 
 export function RegistrarLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [readyCount, setReadyCount] = useState(0);
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -37,6 +35,8 @@ export function RegistrarLayout() {
       .then(res => setReadyCount(res.stats?.readyForFinalApproval || 0))
       .catch(() => {});
   }, [location.pathname]);
+
+  const closeMobile = () => setMobileDrawerOpen(false);
 
   const navSections = [
     {
@@ -75,7 +75,7 @@ export function RegistrarLayout() {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside 
         className={`${sidebarOpen ? 'w-64' : 'w-20'} hidden md:flex flex-col bg-slate-900 text-white transition-all duration-300 ease-in-out z-20`}
       >
@@ -126,11 +126,6 @@ export function RegistrarLayout() {
                         )}
                       </>
                     )}
-                    {!sidebarOpen && (
-                      <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
-                        {item.label}
-                      </div>
-                    )}
                   </Link>
                 );
               })}
@@ -146,25 +141,88 @@ export function RegistrarLayout() {
         </div>
       </aside>
 
+      {/* Mobile Slide-Over Drawer */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden bg-slate-900/60 backdrop-blur-xs flex">
+          <div className="w-72 bg-slate-900 text-white h-full flex flex-col shadow-2xl animate-in slide-in-from-left duration-200">
+            <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <ImageWithFallback src={mwuLogo} alt="MWU Logo" className="w-8 h-8 rounded-md object-contain bg-white p-0.5" />
+                <span className="font-bold text-white">MWU Registrar</span>
+              </div>
+              <button onClick={closeMobile} className="p-2 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              {navSections.map((section, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1">
+                    {section.title}
+                  </div>
+                  {section.items.map((item) => {
+                    const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== "/registrar");
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={closeMobile}
+                        className={`flex items-center px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          isActive ? "bg-blue-600 text-white font-bold" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
+                      >
+                        <item.icon className={`w-4 h-4 mr-3 ${isActive ? "text-white" : "text-slate-400"}`} />
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <span className="ml-auto bg-amber-500 text-slate-900 py-0.5 px-2 rounded-full text-xs font-bold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-slate-800 mt-4">
+                <button
+                  onClick={() => { closeMobile(); logout(); }}
+                  className="w-full flex items-center px-3.5 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors"
+                >
+                  <LogOut className="w-4 h-4 mr-3 text-red-400" />
+                  <span>Log out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1" onClick={closeMobile} />
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10 sticky top-0 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button className="md:hidden text-slate-500 hover:text-slate-700">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setMobileDrawerOpen(true)} 
+              className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+              aria-label="Open mobile menu"
+            >
               <Menu className="w-6 h-6" />
             </button>
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-slate-900 hidden sm:block">
-                Central Registrar Administration
+              <h1 className="text-base sm:text-xl font-bold text-slate-900 truncate">
+                Central Registrar Admin
               </h1>
-              <span className="text-xs text-slate-500">Madda Walabu University e-Clearance Management</span>
+              <span className="text-[11px] text-slate-500 hidden sm:block">Madda Walabu University e-Clearance</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 {initials}
               </div>
               <div className="hidden md:flex flex-col items-start">
