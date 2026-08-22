@@ -34,6 +34,7 @@ import { CompletedClearancesPage } from "./pages/registrar/completed/CompletedCl
 import { RejectedClearancesPage } from "./pages/registrar/rejected/RejectedClearancesPage";
 import { VerifyCertificate } from "./pages/public/VerifyCertificate";
 import { FaqPage } from "./pages/public/FaqPage";
+import { FeaturesPage } from "./pages/public/FeaturesPage";
 import { FinalApprovalPage } from "./pages/registrar/final-approval/FinalApprovalPage";
 import { CertificatesPage } from "./pages/registrar/certificates/CertificatesPage";
 import { StudentDatabasePage as RegistrarStudentDatabasePage } from "./pages/registrar/students/StudentDatabasePage";
@@ -49,6 +50,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: LandingPage },
       { path: "verify", Component: VerifyCertificate },
+      { path: "features", Component: FeaturesPage },
+      { path: "feature", Component: FeaturesPage },
       { path: "faq", Component: FaqPage },
       { path: "faqs", Component: FaqPage },
       { path: "login", Component: LoginPage },
