@@ -1,45 +1,55 @@
-import React, { useState } from "react";
-import { Link } from "react-router";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import { Button } from "@/app/components/ui/Button";
 import { Certificate } from "@/app/components/shared/Certificate";
 import { 
   Search, 
   ShieldCheck, 
   XCircle, 
-  Download, 
   Printer, 
   ScanLine,
   CheckCircle2
 } from "lucide-react";
-import { publicService, VerificationResult } from "../../services/publicService";
-import { toast } from "sonner";
+import { publicService, VerifiedCertificateData } from "../../services/publicService";
 
 export function VerifyCertificate() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("cert") || "");
   const [isSearching, setIsSearching] = useState(false);
   const [result, setResult] = useState<"idle" | "valid" | "invalid">("idle");
-  const [certData, setCertData] = useState<VerificationResult | null>(null);
+  const [certificate, setCertificate] = useState<VerifiedCertificateData | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
+  const performVerification = async (query: string) => {
+    if (!query || !query.trim()) return;
     setIsSearching(true);
     try {
-      const res = await publicService.verifyCertificate(searchQuery.trim());
-      if (res.valid && res.certificate) {
+      const res = await publicService.verifyCertificate(query.trim());
+      if ((res.isValid || (res as any).valid || res.success) && res.certificate) {
         setResult("valid");
-        setCertData(res);
+        setCertificate(res.certificate);
       } else {
         setResult("invalid");
-        setCertData(null);
+        setCertificate(null);
       }
     } catch {
       setResult("invalid");
-      setCertData(null);
+      setCertificate(null);
     } finally {
       setIsSearching(false);
     }
+  };
+
+  useEffect(() => {
+    const certParam = searchParams.get("cert");
+    if (certParam) {
+      setSearchQuery(certParam);
+      performVerification(certParam);
+    }
+  }, [searchParams]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    performVerification(searchQuery);
   };
 
   return (
@@ -51,7 +61,7 @@ export function VerifyCertificate() {
           <ShieldCheck className="w-16 h-16 mx-auto mb-6 text-blue-400" />
           <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Verify Digital Clearance</h1>
           <p className="text-slate-300 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-            Enter a certificate number or student ID to verify the authenticity of a Madda Walabu University digital clearance certificate.
+            Enter a certificate number, student ID, or request ID to verify the authenticity of a Madda Walabu University digital clearance certificate.
           </p>
 
           <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
@@ -62,7 +72,7 @@ export function VerifyCertificate() {
               <input
                 type="text"
                 className="block w-full pl-11 pr-4 py-4 bg-white border-2 border-transparent rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:border-blue-400 transition-all text-lg shadow-lg"
-                placeholder="e.g. MWU-CLR-2026-8932 or UGR/1234/12"
+                placeholder="e.g. MWU-CLR-2026-8304 or Ugr/50002/15"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -94,7 +104,7 @@ export function VerifyCertificate() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Central Registry Verification</h3>
               <p className="text-slate-500 max-w-md mx-auto text-sm">
-                Each certificate issued by the university contains a verifiable digital cryptographic hash and unique sequence.
+                Each certificate issued by Madda Walabu University contains a verifiable digital cryptographic hash and unique Certificate Serial Number.
               </p>
             </div>
           )}
@@ -112,12 +122,12 @@ export function VerifyCertificate() {
               </div>
               <div className="p-8 text-center space-y-4">
                 <p className="text-slate-600 text-sm">Please verify the certificate serial number or student ID and try again.</p>
-                <Button variant="outline" onClick={() => setResult("idle")}>Clear Search</Button>
+                <Button variant="outline" onClick={() => { setResult("idle"); setSearchQuery(""); }}>Clear Search</Button>
               </div>
             </div>
           )}
 
-          {result === "valid" && certData && certData.certificate && (
+          {result === "valid" && certificate && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="bg-white rounded-2xl shadow-sm border border-emerald-200 overflow-hidden">
                 <div className="bg-emerald-50 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-emerald-100">
@@ -140,10 +150,10 @@ export function VerifyCertificate() {
                 <div className="p-6 md:p-8 bg-slate-50 flex justify-center overflow-x-auto">
                   <div className="min-w-[800px] w-full transform scale-95 sm:scale-100 origin-top">
                     <Certificate 
-                      certNumber={certData.certificate.certNumber}
-                      studentName={certData.student.name}
-                      studentId={certData.student.studentId}
-                      department={certData.student.department}
+                      certNumber={certificate.certNumber}
+                      studentName={certificate.studentName}
+                      studentId={certificate.studentId}
+                      department={certificate.department}
                     />
                   </div>
                 </div>
@@ -156,17 +166,17 @@ export function VerifyCertificate() {
                   <div>
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Issue Date</p>
                     <p className="font-semibold text-slate-900">
-                      {new Date(certData.certificate.issuedAt).toLocaleDateString()}
+                      {new Date(certificate.issuedAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Authority</p>
-                    <p className="font-semibold text-slate-900">MWU Registrar</p>
+                    <p className="font-semibold text-slate-900">{certificate.approvedByName || "MWU Registrar"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Blockchain Hash</p>
                     <p className="font-mono text-xs text-emerald-700 bg-emerald-50 p-1.5 rounded border border-emerald-200 break-all">
-                      {certData.certificate.blockchainHash || "0x8f4b...3b2a"}
+                      {certificate.blockchainHash || "0x8f4b...3b2a"}
                     </p>
                   </div>
                 </div>

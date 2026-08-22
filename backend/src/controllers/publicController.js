@@ -208,19 +208,27 @@ export const getPublicStats = async (req, res) => {
   }
 };
 
-// @desc    Verify certificate by certNumber or studentId
+// @desc    Verify certificate by certNumber or studentId or requestId
 // @route   GET /api/public/verify/:query
 // @access  Public
 export const verifyCertificate = async (req, res) => {
   try {
     const { query } = req.params;
-    const trimmed = query.trim();
+    if (!query || !query.trim()) {
+      return res.status(400).json({ success: false, isValid: false, valid: false, message: "Query parameter is required." });
+    }
 
+    const trimmed = query.trim();
+    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = escapeRegex(trimmed);
+
+    // Search by Certificate Number, Request ID, Student ID, or Student Name
     const clearance = await Clearance.findOne({
       $or: [
-        { "certificate.certNumber": { $regex: new RegExp(`^${trimmed}$`, "i") } },
-        { requestId: { $regex: new RegExp(`^${trimmed}$`, "i") } },
-        { studentId: { $regex: new RegExp(`^${trimmed}$`, "i") } },
+        { "certificate.certNumber": { $regex: new RegExp(escaped, "i") } },
+        { requestId: { $regex: new RegExp(`^${escaped}$`, "i") } },
+        { studentId: { $regex: new RegExp(`^${escaped}$`, "i") } },
+        { studentName: { $regex: new RegExp(escaped, "i") } },
       ],
       status: "completed",
     });
@@ -229,13 +237,15 @@ export const verifyCertificate = async (req, res) => {
       return res.status(404).json({
         success: false,
         isValid: false,
-        message: "No valid clearance certificate found for this identifier.",
+        valid: false,
+        message: `No active certified clearance found matching "${trimmed}".`,
       });
     }
 
     return res.json({
       success: true,
       isValid: true,
+      valid: true,
       certificate: {
         certNumber: clearance.certificate.certNumber,
         requestId: clearance.requestId,
@@ -249,7 +259,7 @@ export const verifyCertificate = async (req, res) => {
         blockchainHash: clearance.certificate.blockchainHash,
         qrCode: clearance.certificate.qrCode,
         approvedByName: clearance.finalApproval?.approvedByName || "Registrar Office",
-        departmentApprovals: clearance.departmentApprovals.map((d) => ({
+        departmentApprovals: (clearance.departmentApprovals || []).map((d) => ({
           name: d.departmentName,
           status: d.status,
           reviewedByName: d.reviewedByName,
@@ -258,6 +268,6 @@ export const verifyCertificate = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, isValid: false, valid: false, message: error.message });
   }
 };
