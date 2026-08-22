@@ -4,9 +4,13 @@ import { Notification } from "../models/Notification.js";
 import { AuditLog } from "../models/AuditLog.js";
 import { sendEmail } from "../utils/mailer.js";
 
-// Helper to determine officer's department name
-const getOfficerDept = (user) => {
-  return user.department || "Library";
+// Helper to determine officer's department matching filter
+const getOfficerDeptRegex = (user) => {
+  const dept = user.department || "Library";
+  if (dept.toLowerCase().includes("head") || dept.toLowerCase().includes("dept")) {
+    return new RegExp("^(Department Head|DEPT)$", "i");
+  }
+  return new RegExp(`^${dept}$`, "i");
 };
 
 // @desc    Get officer dashboard metrics
@@ -14,10 +18,11 @@ const getOfficerDept = (user) => {
 // @access  Private (Officer, Registrar)
 export const getOfficerDashboard = async (req, res) => {
   try {
-    const dept = getOfficerDept(req.user);
+    const dept = req.user.department || "Library";
+    const deptRegex = getOfficerDeptRegex(req.user);
 
     const allClearances = await Clearance.find({
-      "departmentApprovals.departmentName": { $regex: new RegExp(`^${dept}$`, "i") },
+      "departmentApprovals.departmentName": { $regex: deptRegex },
     });
 
     let pendingCount = 0;
@@ -29,7 +34,7 @@ export const getOfficerDashboard = async (req, res) => {
 
     allClearances.forEach((clr) => {
       const deptAppr = clr.departmentApprovals.find(
-        (a) => a.departmentName.toLowerCase() === dept.toLowerCase()
+        (a) => deptRegex.test(a.departmentName)
       );
       if (deptAppr) {
         if (deptAppr.status === "pending") pendingCount++;
@@ -83,17 +88,18 @@ export const getOfficerDashboard = async (req, res) => {
 // @access  Private (Officer)
 export const getDepartmentQueue = async (req, res) => {
   try {
-    const dept = getOfficerDept(req.user);
+    const dept = req.user.department || "Library";
+    const deptRegex = getOfficerDeptRegex(req.user);
     const { status } = req.query; // pending, approved, rejected, or all
 
     const query = {
-      "departmentApprovals.departmentName": { $regex: new RegExp(`^${dept}$`, "i") },
+      "departmentApprovals.departmentName": { $regex: deptRegex },
     };
 
     if (status && status !== "all") {
       query["departmentApprovals"] = {
         $elemMatch: {
-          departmentName: { $regex: new RegExp(`^${dept}$`, "i") },
+          departmentName: { $regex: deptRegex },
           status: status,
         },
       };
@@ -103,7 +109,7 @@ export const getDepartmentQueue = async (req, res) => {
 
     const formattedList = clearances.map((clr) => {
       const deptAppr = clr.departmentApprovals.find(
-        (a) => a.departmentName.toLowerCase() === dept.toLowerCase()
+        (a) => deptRegex.test(a.departmentName)
       );
       return {
         _id: clr._id,
@@ -147,7 +153,8 @@ export const reviewClearance = async (req, res) => {
     const { id } = req.params;
     const { action, remarks, rejectionReason, itemsChecked } = req.body; // action: 'approve' | 'reject' | 'hold'
     const officer = req.user;
-    const dept = getOfficerDept(officer);
+    const dept = officer.department || "Library";
+    const deptRegex = getOfficerDeptRegex(officer);
 
     const clearance = await Clearance.findById(id);
     if (!clearance) {
@@ -155,13 +162,13 @@ export const reviewClearance = async (req, res) => {
     }
 
     const deptApprIndex = clearance.departmentApprovals.findIndex(
-      (a) => a.departmentName.toLowerCase() === dept.toLowerCase()
+      (a) => deptRegex.test(a.departmentName)
     );
 
     if (deptApprIndex === -1) {
       return res.status(400).json({
         success: false,
-        message: `Department '${dept}' is not a reviewer for this clearance request.`,
+        message: `Department '${dept}' is not an active reviewer for this clearance request.`,
       });
     }
 

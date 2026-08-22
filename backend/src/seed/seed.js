@@ -25,7 +25,7 @@ export const seedDatabase = async () => {
     console.log("🌱 Checking and seeding initial database data...");
 
     // 1. Seed Registrar Admin
-    let registrar = await User.findOne({ role: "registrar" });
+    let registrar = await User.findOne({ email: "registrar@mwu.edu.et" });
     if (!registrar) {
       registrar = await User.create({
         name: "Registrar Admin",
@@ -41,8 +41,18 @@ export const seedDatabase = async () => {
       console.log("👤 Created Registrar Admin account: registrar@mwu.edu.et");
     }
 
-    // 2. Seed Department Officers
+    // 2. Seed Department Officers & Department Heads
     const officersData = [
+      {
+        name: "Dr. Abebe Kebede",
+        email: "cs_head@mwu.edu.et",
+        password: "Officer@12345",
+        role: "officer",
+        staffId: "EMP/042",
+        department: "Department Head",
+        college: "College of Computing",
+        phone: "+251 91 200 0005",
+      },
       {
         name: "Sarah Officer",
         email: "library@mwu.edu.et",
@@ -79,16 +89,6 @@ export const seedDatabase = async () => {
         department: "Bookstore",
         phone: "+251 91 200 0004",
       },
-      {
-        name: "Dr. Abebe Kebede",
-        email: "cs_head@mwu.edu.et",
-        password: "Officer@12345",
-        role: "officer",
-        staffId: "EMP/042",
-        department: "Department Head",
-        college: "College of Computing",
-        phone: "+251 91 200 0005",
-      },
     ];
 
     const officerMap = {};
@@ -102,7 +102,7 @@ export const seedDatabase = async () => {
     }
 
     // 3. Seed Students
-    let student1 = await User.findOne({ studentId: "UGR/1234/12" });
+    let student1 = await User.findOne({ email: "student@mwu.edu.et" });
     if (!student1) {
       student1 = await User.create({
         name: "John Doe",
@@ -131,24 +131,19 @@ export const seedDatabase = async () => {
       console.log("🎓 Created Student account: student@mwu.edu.et (UGR/1234/12)");
     }
 
-    let student2 = await User.findOne({ studentId: "UGR/5533/11" });
-    if (!student2) {
-      student2 = await User.create({
-        name: "Betelhem Alemu",
-        email: "betelhem@mwu.edu.et",
-        password: "Student@12345",
-        role: "student",
-        studentId: "UGR/5533/11",
-        department: "Information Systems",
-        college: "College of Computing",
-        program: "Undergraduate Regular",
-        phone: "+251 94 555 6677",
-        status: "Active",
-      });
-    }
-
-    // 4. Seed Departments
-    const departmentsData = [
+    // 4. Seed Standard Departments
+    const standardDepartments = [
+      {
+        name: "Department Head",
+        code: "DEPT",
+        category: "academic",
+        description: "Academic department clearance and project submission sign-off",
+        contactEmail: "cs_head@mwu.edu.et",
+        officeLocation: "College of Computing Building",
+        phone: "+251 22 665 1105",
+        headOfficer: officerMap["Department Head"],
+        averageProcessingHours: 24,
+      },
       {
         name: "Library",
         code: "LIB",
@@ -194,17 +189,6 @@ export const seedDatabase = async () => {
         averageProcessingHours: 18,
       },
       {
-        name: "Department Head",
-        code: "DEPT",
-        category: "academic",
-        description: "Academic department clearance and project submission",
-        contactEmail: "cs_head@mwu.edu.et",
-        officeLocation: "Computing Building, 3rd Floor",
-        phone: "+251 22 665 1105",
-        headOfficer: officerMap["Department Head"],
-        averageProcessingHours: 36,
-      },
-      {
         name: "Registrar",
         code: "REG",
         category: "administrative",
@@ -217,13 +201,16 @@ export const seedDatabase = async () => {
       },
     ];
 
-    for (const d of departmentsData) {
+    // Clean up any test/malformed departments
+    await Department.deleteMany({ name: { $regex: /5246436|Departmen head/i } });
+
+    for (const d of standardDepartments) {
       const exists = await Department.findOne({ code: d.code });
       if (!exists) {
         await Department.create(d);
       }
     }
-    console.log("🏢 Seeded university departments.");
+    console.log("🏢 Seeded official university departments.");
 
     // 5. Seed Workflows
     const workflowsData = [
@@ -235,6 +222,16 @@ export const seedDatabase = async () => {
         steps: [
           {
             stepNumber: 1,
+            departmentName: "Department Head",
+            departmentCode: "DEPT",
+            instructions: "Submit final approved thesis/project copy and academic clearance.",
+            requiredChecklist: [
+              { item: "Final Project / Thesis Approved", isMandatory: true },
+              { item: "Lab Equipment Returned", isMandatory: true },
+            ],
+          },
+          {
+            stepNumber: 2,
             departmentName: "Library",
             departmentCode: "LIB",
             instructions: "Return all borrowed books and pay any outstanding fines.",
@@ -244,7 +241,7 @@ export const seedDatabase = async () => {
             ],
           },
           {
-            stepNumber: 2,
+            stepNumber: 3,
             departmentName: "Dormitory",
             departmentCode: "DORM",
             instructions: "Hand over room key and undergo room inventory inspection.",
@@ -254,7 +251,7 @@ export const seedDatabase = async () => {
             ],
           },
           {
-            stepNumber: 3,
+            stepNumber: 4,
             departmentName: "Cafeteria",
             departmentCode: "CAFE",
             instructions: "Surrender meal card.",
@@ -263,22 +260,12 @@ export const seedDatabase = async () => {
             ],
           },
           {
-            stepNumber: 4,
+            stepNumber: 5,
             departmentName: "Bookstore",
             departmentCode: "BOOK",
             instructions: "Return departmental textbooks.",
             requiredChecklist: [
               { item: "All Textbooks Returned", isMandatory: true },
-            ],
-          },
-          {
-            stepNumber: 5,
-            departmentName: "Department Head",
-            departmentCode: "DEPT",
-            instructions: "Submit final approved thesis/project copy and lab clearance.",
-            requiredChecklist: [
-              { item: "Final Project / Thesis Approved", isMandatory: true },
-              { item: "Lab Equipment Returned", isMandatory: true },
             ],
           },
           {
@@ -293,27 +280,6 @@ export const seedDatabase = async () => {
           },
         ],
       },
-      {
-        clearanceType: "withdrawal",
-        title: "Withdrawal Clearance Workflow",
-        description: "For students officially withdrawing from the university before completion.",
-        steps: [
-          { stepNumber: 1, departmentName: "Library", departmentCode: "LIB", requiredChecklist: [{ item: "Books Returned", isMandatory: true }] },
-          { stepNumber: 2, departmentName: "Dormitory", departmentCode: "DORM", requiredChecklist: [{ item: "Key Returned", isMandatory: true }] },
-          { stepNumber: 3, departmentName: "Department Head", departmentCode: "DEPT", requiredChecklist: [{ item: "Advisor Approved", isMandatory: true }] },
-          { stepNumber: 4, departmentName: "Registrar", departmentCode: "REG", requiredChecklist: [{ item: "Withdrawal Registered", isMandatory: true }] },
-        ],
-      },
-      {
-        clearanceType: "transfer",
-        title: "Transfer Clearance Workflow",
-        description: "For students transferring to another university or program.",
-        steps: [
-          { stepNumber: 1, departmentName: "Library", departmentCode: "LIB", requiredChecklist: [{ item: "No Dues", isMandatory: true }] },
-          { stepNumber: 2, departmentName: "Department Head", departmentCode: "DEPT", requiredChecklist: [{ item: "Transfer Endorsed", isMandatory: true }] },
-          { stepNumber: 3, departmentName: "Registrar", departmentCode: "REG", requiredChecklist: [{ item: "Official Transcript Packaged", isMandatory: true }] },
-        ],
-      },
     ];
 
     for (const wf of workflowsData) {
@@ -322,109 +288,8 @@ export const seedDatabase = async () => {
         await Workflow.create(wf);
       }
     }
-    console.log("🔄 Seeded clearance workflow definitions.");
 
-    // 6. Seed Sample Initial Clearance for Student 1
-    const sampleClearanceExists = await Clearance.findOne({ student: student1._id });
-    if (!sampleClearanceExists) {
-      await Clearance.create({
-        requestId: "REQ-2026-8932",
-        student: student1._id,
-        studentName: student1.name,
-        studentId: student1.studentId,
-        department: student1.department,
-        college: student1.college,
-        program: student1.program,
-        clearanceType: "graduation",
-        reason: "Graduating Batch of 2017 E.C. Computer Science degree clearance.",
-        contactDetails: {
-          phone: student1.phone,
-          email: student1.email,
-          emergencyContactName: "Abebe Kebede",
-          emergencyPhone: "+251 92 111 2233",
-          currentAddress: "Robe, Kebele 02",
-        },
-        academicDetails: student1.academicInfo,
-        documents: [
-          {
-            name: "Student_ID_Scanned.jpg",
-            url: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&auto=format&fit=crop",
-            fileSize: "1.2 MB",
-            fileType: "image/jpeg",
-          },
-          {
-            name: "Profile_Photo_Recent.png",
-            url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop",
-            fileSize: "2.4 MB",
-            fileType: "image/png",
-          },
-        ],
-        departmentApprovals: [
-          {
-            departmentName: "Library",
-            departmentCode: "LIB",
-            status: "pending",
-            itemsChecked: [
-              { name: "No Overdue Books", status: "pending", remarks: "" },
-              { name: "Library ID Surrendered", status: "pending", remarks: "" },
-            ],
-          },
-          {
-            departmentName: "Dormitory",
-            departmentCode: "DORM",
-            status: "pending",
-            itemsChecked: [
-              { name: "Room Key Returned", status: "pending", remarks: "" },
-              { name: "Mattress & Furniture Checked", status: "pending", remarks: "" },
-            ],
-          },
-          {
-            departmentName: "Cafeteria",
-            departmentCode: "CAFE",
-            status: "pending",
-            itemsChecked: [
-              { name: "Non-cafe / Cafe Coupon Checked", status: "pending", remarks: "" },
-            ],
-          },
-          {
-            departmentName: "Bookstore",
-            departmentCode: "BOOK",
-            status: "pending",
-            itemsChecked: [
-              { name: "All Textbooks Returned", status: "pending", remarks: "" },
-            ],
-          },
-          {
-            departmentName: "Department Head",
-            departmentCode: "DEPT",
-            status: "pending",
-            itemsChecked: [
-              { name: "Final Project / Thesis Approved", status: "pending", remarks: "" },
-            ],
-          },
-          {
-            departmentName: "Registrar",
-            departmentCode: "REG",
-            status: "pending",
-            itemsChecked: [
-              { name: "Grade Records Verified", status: "pending", remarks: "" },
-            ],
-          },
-        ],
-        status: "pending",
-        auditTrail: [
-          {
-            action: "CLEARANCE_SUBMITTED",
-            performedBy: student1.name,
-            role: "student",
-            details: "Initial graduation clearance request created.",
-          },
-        ],
-      });
-      console.log("📄 Created sample clearance REQ-2026-8932 for John Doe.");
-    }
-
-    console.log("✅ Database seeding complete!");
+    console.log("✅ Database verification and seeding complete!");
   } catch (error) {
     console.error("❌ Seed Error:", error);
   }

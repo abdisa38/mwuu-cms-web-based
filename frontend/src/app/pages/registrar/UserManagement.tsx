@@ -11,7 +11,8 @@ import {
   User as UserIcon, 
   Building2, 
   ShieldCheck,
-  ChevronDown
+  Award,
+  GraduationCap
 } from "lucide-react";
 import { registrarService } from "../../services/registrarService";
 import { UserProfile } from "../../services/authService";
@@ -19,7 +20,6 @@ import { MWU_ACADEMIC_COLLEGES } from "../../data/mwuAcademicStructure";
 import { toast } from "sonner";
 
 export const CLEARANCE_OFFICES = [
-  "Department Head",
   "Library",
   "Dormitory",
   "Cafeteria",
@@ -46,6 +46,7 @@ export function UserManagement() {
     email: "",
     password: "",
     role: "student",
+    userRoleCategory: "student", // 'student' | 'dept_head' | 'officer' | 'registrar'
     college: MWU_ACADEMIC_COLLEGES[0].name,
     department: MWU_ACADEMIC_COLLEGES[0].departments[0].name,
     studentId: "",
@@ -59,7 +60,7 @@ export function UserManagement() {
       const res = await registrarService.getUsers({ role: roleParam, search });
       setUsers(res.users || []);
     } catch {
-      toast.error("Failed to load users.");
+      toast.error("Failed to load users from database.");
     } finally {
       setLoading(false);
     }
@@ -71,26 +72,37 @@ export function UserManagement() {
 
   const currentCollegeObj = MWU_ACADEMIC_COLLEGES.find((c) => c.name === selectedCollege) || MWU_ACADEMIC_COLLEGES[0];
 
-  const handleRoleChange = (role: string) => {
-    if (role === "student") {
+  const handleRoleCategoryChange = (category: string) => {
+    if (category === "student") {
       setNewUser({
         ...newUser,
-        role,
+        role: "student",
+        userRoleCategory: "student",
         college: currentCollegeObj.name,
         department: currentCollegeObj.departments[0].name,
       });
-    } else if (role === "officer") {
+    } else if (category === "dept_head") {
       setNewUser({
         ...newUser,
-        role,
-        college: "Central Administration",
+        role: "officer",
+        userRoleCategory: "dept_head",
+        college: currentCollegeObj.name,
         department: "Department Head",
+      });
+    } else if (category === "officer") {
+      setNewUser({
+        ...newUser,
+        role: "officer",
+        userRoleCategory: "officer",
+        college: "Central Administration",
+        department: "Library",
       });
     } else {
       // registrar
       setNewUser({
         ...newUser,
-        role,
+        role: "registrar",
+        userRoleCategory: "registrar",
         college: "Registrar Administration",
         department: "Registrar",
       });
@@ -103,7 +115,7 @@ export function UserManagement() {
     setNewUser({
       ...newUser,
       college: col.name,
-      department: col.departments[0].name,
+      department: newUser.userRoleCategory === "dept_head" ? "Department Head" : col.departments[0].name,
     });
   };
 
@@ -111,14 +123,25 @@ export function UserManagement() {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await registrarService.createUser(newUser);
-      toast.success(`User ${newUser.name} created successfully as ${newUser.role.toUpperCase()}!`);
+      await registrarService.createUser({
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+        college: newUser.college,
+        department: newUser.department,
+        studentId: newUser.studentId,
+        phone: newUser.phone,
+      });
+
+      toast.success(`User ${newUser.name} created successfully in MongoDB database!`);
       setIsAddModalOpen(false);
       setNewUser({
         name: "",
         email: "",
         password: "",
         role: "student",
+        userRoleCategory: "student",
         college: MWU_ACADEMIC_COLLEGES[0].name,
         department: MWU_ACADEMIC_COLLEGES[0].departments[0].name,
         studentId: "",
@@ -133,10 +156,10 @@ export function UserManagement() {
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm("Are you sure you want to delete this user from database?")) return;
     try {
       await registrarService.deleteUser(id);
-      toast.success("User removed.");
+      toast.success("User deleted successfully.");
       fetchUsers();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete user.");
@@ -144,11 +167,11 @@ export function UserManagement() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-20 md:pb-0 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto space-y-6 pb-20 md:pb-8 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">User Management</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage student accounts, department officers, and university administrators.</p>
+          <p className="text-slate-500 text-sm mt-1">Manage authentic student accounts, department heads, officers, and administrators.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchUsers} className="bg-white">
@@ -167,7 +190,7 @@ export function UserManagement() {
             {[
               { id: 'all', label: 'All Users' },
               { id: 'students', label: 'Students' },
-              { id: 'officers', label: 'Officers' },
+              { id: 'officers', label: 'Officers & Heads' },
               { id: 'admins', label: 'Admins' }
             ].map(tab => (
               <button 
@@ -188,7 +211,7 @@ export function UserManagement() {
               type="text" 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, email, student ID..." 
+              placeholder="Search name, email, ID..." 
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
@@ -215,6 +238,7 @@ export function UserManagement() {
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
                           u.role === 'registrar' || u.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                          u.department === 'Department Head' ? 'bg-amber-100 text-amber-800' :
                           u.role === 'officer' ? 'bg-indigo-100 text-indigo-700' :
                           'bg-blue-100 text-blue-700'
                         }`}>
@@ -229,13 +253,16 @@ export function UserManagement() {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase border ${
                         u.role === 'registrar' || u.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        u.department === 'Department Head' ? 'bg-amber-50 text-amber-800 border-amber-200 font-bold' :
                         u.role === 'officer' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                         'bg-blue-50 text-blue-700 border-blue-200'
                       }`}>
-                        {u.role}
+                        {u.department === 'Department Head' ? 'DEPT HEAD' : u.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-800 font-medium">{u.department || "General"}</td>
+                    <td className="px-6 py-4 text-slate-800 font-medium">
+                      {u.department === "Department Head" ? `Department Head (${u.college || "Academic"})` : u.department || "General"}
+                    </td>
                     <td className="px-6 py-4 text-xs text-slate-600 font-mono">
                       <p>{u.email}</p>
                       {u.phone && <p className="text-slate-400 font-sans">{u.phone}</p>}
@@ -318,20 +345,21 @@ export function UserManagement() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">User Role *</label>
+                <label className="text-xs font-bold text-slate-700">User Role Category *</label>
                 <select 
-                  value={newUser.role} 
-                  onChange={e => handleRoleChange(e.target.value)}
+                  value={newUser.userRoleCategory} 
+                  onChange={e => handleRoleCategoryChange(e.target.value)}
                   className="w-full h-11 px-3 border border-slate-300 rounded-xl bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="student">Student (Clearance Applicant)</option>
-                  <option value="officer">Department Officer / Department Head</option>
+                  <option value="dept_head">Department Head (Academic Sign-off Desk)</option>
+                  <option value="officer">Department Officer (Clearance Desk)</option>
                   <option value="registrar">Registrar Administrator</option>
                 </select>
               </div>
 
               {/* DYNAMIC DROPDOWNS BASED ON ROLE */}
-              {newUser.role === "student" ? (
+              {newUser.userRoleCategory === "student" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700">Select College / Faculty</label>
@@ -359,9 +387,31 @@ export function UserManagement() {
                     </select>
                   </div>
                 </div>
-              ) : newUser.role === "officer" ? (
+              ) : newUser.userRoleCategory === "dept_head" ? (
+                <div className="space-y-3 p-3.5 bg-amber-50/60 rounded-xl border border-amber-200">
+                  <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                    <GraduationCap className="w-4 h-4 text-amber-700" /> Academic Department Head Setup
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Select College / Faculty</label>
+                    <select 
+                      value={selectedCollege} 
+                      onChange={e => handleCollegeChange(e.target.value)}
+                      className="w-full h-10 px-3 border border-slate-300 rounded-xl bg-white text-xs font-medium focus:ring-2 focus:ring-blue-500"
+                    >
+                      {MWU_ACADEMIC_COLLEGES.map(c => (
+                        <option key={c.id} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Assigned Clearance Review Desk</label>
+                    <Input value="Department Head" disabled className="bg-white text-sm font-semibold text-amber-900" />
+                  </div>
+                </div>
+              ) : newUser.userRoleCategory === "officer" ? (
                 <div className="space-y-1 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                  <label className="text-xs font-bold text-indigo-900">Assigned Clearance Desk / Department Head *</label>
+                  <label className="text-xs font-bold text-indigo-900">Assigned Clearance Desk *</label>
                   <select 
                     value={newUser.department} 
                     onChange={e => setNewUser({ ...newUser, department: e.target.value })}
@@ -369,7 +419,7 @@ export function UserManagement() {
                   >
                     {CLEARANCE_OFFICES.map(off => (
                       <option key={off} value={off}>
-                        {off === "Department Head" ? "Department Head (Academic Sign-off Desk)" : `${off} Clearance Desk`}
+                        {off} Clearance Desk
                       </option>
                     ))}
                   </select>
@@ -383,11 +433,11 @@ export function UserManagement() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">{newUser.role === "student" ? "Student ID" : "Staff ID"}</label>
+                  <label className="text-xs font-bold text-slate-700">{newUser.userRoleCategory === "student" ? "Student ID" : "Staff ID"}</label>
                   <Input 
                     value={newUser.studentId} 
                     onChange={e => setNewUser({ ...newUser, studentId: e.target.value })} 
-                    placeholder={newUser.role === "student" ? "e.g. UGR/1234/12" : "e.g. EMP/042"}
+                    placeholder={newUser.userRoleCategory === "student" ? "e.g. UGR/1234/12" : "e.g. EMP/042"}
                   />
                 </div>
 
