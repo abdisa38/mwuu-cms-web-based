@@ -59,49 +59,40 @@ export function LoginPage() {
           </Link>
         </div>
 
-        {/* Featured Center Card with User's Banner */}
-        <div className="relative z-10 my-auto py-6 max-w-lg">
+        {/* Featured Center Card with User's Stretched Banner */}
+        <div className="relative z-10 my-auto py-4 max-w-lg w-full">
           {/* Card Container */}
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-5 xl:p-6 shadow-2xl space-y-5 transform hover:scale-[1.01] transition-transform duration-300">
-            {/* Campus Banner Image from public folder - Taller & Vertical */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg border border-white/25 h-72 sm:h-80 xl:h-[340px] w-full bg-slate-900 group">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-4 transform hover:scale-[1.01] transition-transform duration-300">
+            {/* Campus Banner Image from public folder - Full Vertical Stretch */}
+            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-white/25 h-[420px] sm:h-[460px] xl:h-[500px] w-full bg-slate-900 group">
               <img 
-                src="/mwu banner.jfif" 
+                src="/stretch mwu banner.jpg" 
                 alt="Madda Walabu University Campus" 
-                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000&auto=format&fit=crop";
+                  (e.target as HTMLImageElement).src = "/mwu banner.jfif";
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end p-5">
-                <div className="flex items-center gap-3">
-                  <ImageWithFallback src={mwuLogo} alt="MWU Logo" className="w-12 h-12 rounded-xl object-contain bg-white p-1 shadow-md border border-white/30" />
+              {/* Bottom Gradient Overlay on Image */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent flex flex-col justify-end p-6">
+                <div className="flex items-center gap-3.5 mb-3">
+                  <ImageWithFallback src={mwuLogo} alt="MWU Logo" className="w-12 h-12 rounded-xl object-contain bg-white p-1 shadow-lg border border-white/40" />
                   <div>
-                    <h3 className="text-white font-bold text-lg leading-tight drop-shadow-md">Madda Walabu University</h3>
-                    <span className="text-blue-200 text-xs font-medium tracking-wide">Official Digital Clearance Portal</span>
+                    <h3 className="text-white font-extrabold text-xl leading-tight drop-shadow-md">Madda Walabu University</h3>
+                    <span className="text-blue-200 text-xs font-semibold tracking-wide uppercase">Official Digital Clearance Portal</span>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* University Card Content */}
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-white leading-tight">
-                Streamline your clearance & graduate with confidence.
-              </h2>
-              <p className="text-blue-100 text-sm leading-relaxed">
-                Connect directly with your Academic Department, Library, Dormitory, Cafeteria, Bookstore, and the Central Registrar in one unified digital workflow.
-              </p>
-
-              {/* Feature Highlights Grid */}
-              <div className="grid grid-cols-2 gap-2.5 pt-2">
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 flex items-center gap-2.5 text-xs font-medium text-blue-100">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Real-Time Desk Routing</span>
-                </div>
-                <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 flex items-center gap-2.5 text-xs font-medium text-blue-100">
-                  <Award className="w-4 h-4 text-amber-300 shrink-0" />
-                  <span>QR Verifiable Certificate</span>
+                {/* Feature Badges overlaid directly at bottom of the banner */}
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-white/15">
+                  <div className="bg-white/15 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2 text-xs font-medium text-blue-100">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Real-Time Desk Routing</span>
+                  </div>
+                  <div className="bg-white/15 backdrop-blur-md rounded-xl p-2.5 border border-white/15 flex items-center gap-2 text-xs font-medium text-blue-100">
+                    <Award className="w-4 h-4 text-amber-300 shrink-0" />
+                    <span>QR Verifiable Certificate</span>
+                  </div>
                 </div>
               </div>
             </div>
