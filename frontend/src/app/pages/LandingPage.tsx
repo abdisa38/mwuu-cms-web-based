@@ -57,15 +57,15 @@ export function LandingPage() {
           
           <div className="mt-20 flex flex-wrap justify-center gap-x-12 gap-y-8 text-slate-500">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">{stats.studentsCleared}</span>
-              <span className="text-sm font-medium">Students Cleared</span>
+              <span className="text-3xl font-bold text-slate-900">100%</span>
+              <span className="text-sm font-medium">Paperless Workflow</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">{stats.departmentsCount}</span>
+              <span className="text-3xl font-bold text-slate-900">{stats.departmentsCount || "6"}</span>
               <span className="text-sm font-medium">Clearance Desks</span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-slate-900">{stats.averageApprovalTime}</span>
+              <span className="text-3xl font-bold text-slate-900">{stats.averageApprovalTime || "24hr"}</span>
               <span className="text-sm font-medium">Average Processing</span>
             </div>
           </div>
