@@ -44,16 +44,16 @@ git push origin main
 PORT=5000
 NODE_ENV=production
 FRONTEND_URL=*
-MONGO_URI=mongodb+srv://abdisaawel313_db_user:ZhisJbZxmkllIcLP@cluster0.0fujnax.mongodb.net/mwu_clearance?retryWrites=true&w=majority&appName=Cluster0
-JWT_SECRET=fe8626cd-87f4-4d0c-9047-1d2dcc4ac629eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyMywicm9sZSI6ImFkbWluIn0.6GE7qhatYASEHDzXitii23grw0xaCYGAow7zPYPUl1A
+MONGO_URI=<your_mongodb_connection_string>
+JWT_SECRET=<your_strong_jwt_secret>
 JWT_EXPIRES_IN=7d
-CLOUDINARY_CLOUD_NAME=divkrnd4j
-CLOUDINARY_API_KEY=235296373441826
-CLOUDINARY_API_SECRET=Nv4yCd27Fuw9gt5Nai04_Vxu7KE
+CLOUDINARY_CLOUD_NAME=<your_cloudinary_cloud_name>
+CLOUDINARY_API_KEY=<your_cloudinary_api_key>
+CLOUDINARY_API_SECRET=<your_cloudinary_api_secret>
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=abdisaawel82@gmail.com
-SMTP_PASS=smutwozycmsvvled
+SMTP_USER=<your_email_address>
+SMTP_PASS=<your_email_app_password>
 SMTP_SERVICE=gmail
 ```
 
